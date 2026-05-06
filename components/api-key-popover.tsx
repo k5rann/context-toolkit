@@ -44,18 +44,18 @@ export function ApiKeyPopover() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background/60 backdrop-blur transition-colors hover:bg-muted/60 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-background/80 backdrop-blur-md transition-colors active:scale-95 active:bg-muted hover:bg-muted/80 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
         aria-label="Settings"
       >
-        <Menu className="h-4 w-4" />
+        <Menu className="h-5 w-5" />
         {status === "missing" && (
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-background animate-pulse" />
         )}
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        sideOffset={8}
-        className="w-[360px] !p-5 !rounded-2xl !shadow-2xl"
+        sideOffset={10}
+        className="w-[calc(100vw-24px)] sm:w-[380px] !p-5 !rounded-2xl !shadow-2xl !max-w-[440px]"
       >
         <div className="space-y-5 w-full">
           {/* API KEY SECTION */}
