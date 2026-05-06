@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Context Toolkit
 
-## Getting Started
+A growing suite of focused AI tools — Next.js + Tailwind + shadcn/ui, deployed on Vercel.
 
-First, run the development server:
+**Live tools:**
+- **Context Bundler** — vague request → full master prompt with code-level validation, banned-word scanning, 9 stackable modes
+
+**Coming soon:**
+- Text Humanizer — AI text → human-readable
+- Voice to Text — browser-native speech transcription
+- Conference Notes — continuous listening with smart extraction
+
+## Run locally
 
 ```bash
+git clone https://github.com/<you>/context-toolkit.git
+cd context-toolkit
+npm install
+cp .env.example .env.local
+# (optional) set GEMINI_API_KEY for shared default; set APP_PASSWORD for private gating
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push to GitHub
+2. Import the repo at https://vercel.com/new
+3. (Optional) Set environment variables in Vercel project settings:
+   - `GEMINI_API_KEY` — shared default key
+   - `APP_PASSWORD` — private password gate
+4. Deploy
 
-## Learn More
+## How key handling works
 
-To learn more about Next.js, take a look at the following resources:
+| `GEMINI_API_KEY` | `APP_PASSWORD` | Behavior |
+|---|---|---|
+| Unset | Unset | Open BYO-key — visitors paste their own key |
+| Set | Unset | Open shared — shared key default, visitors can paste own for unlimited |
+| Set | Set | Private shared — password gate, then shared key |
+| Unset | Set | Private BYO-key — password gate, then visitors paste their own |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Personal keys pasted by visitors are stored in their browser's localStorage only — never sent to the server.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech
 
-## Deploy on Vercel
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS 4
+- shadcn/ui (Radix primitives)
+- Gemini API via `@google/generative-ai`
+- next-themes for system / light / dark
+- Lucide icons
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Built by
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[Karanvir Panwar](mailto:karanvirsp8077@gmail.com)
