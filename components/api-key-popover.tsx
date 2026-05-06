@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Menu, KeyRound, ExternalLink, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useApiKey } from "@/components/api-key-provider";
 
@@ -11,7 +10,6 @@ export function ApiKeyPopover() {
   const { userKey, setUserKey, hasSharedKey } = useApiKey();
   const [open, setOpen] = React.useState(false);
 
-  // Close on ESC
   React.useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -21,7 +19,6 @@ export function ApiKeyPopover() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Lock body scroll when open
   React.useEffect(() => {
     if (open) {
       const original = document.body.style.overflow;
@@ -73,49 +70,41 @@ export function ApiKeyPopover() {
 
       {open && (
         <div
-          className="fixed inset-0 z-[100]"
+          className="fixed inset-0 z-[100] flex items-start justify-end"
           role="dialog"
           aria-modal="true"
           aria-label="Settings"
         >
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             style={{ animation: "fadeIn 0.18s ease-out" }}
             onClick={() => setOpen(false)}
           />
 
-          {/* Panel — slides in from right */}
           <div
-            className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-popover border-l border-border shadow-2xl flex flex-col overflow-y-auto"
+            className="relative w-full sm:w-[420px] sm:m-4 sm:rounded-2xl bg-card text-card-foreground border border-border shadow-2xl h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden"
             style={{ animation: "slideInRight 0.22s ease-out" }}
           >
-            {/* Header */}
-            <div className="sticky top-0 bg-popover/95 backdrop-blur border-b border-border px-5 py-3.5 flex items-center justify-between z-10">
-              <div className="text-base font-semibold tracking-tight">
-                Settings
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted active:scale-95 transition-all touch-manipulation"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
-            </div>
+            {/* Close button — floating top right */}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+              className="absolute top-3 right-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted/40 hover:bg-muted active:scale-95 transition-all touch-manipulation"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-            {/* Body */}
-            <div className="px-5 py-5 space-y-6">
+            <div className="flex-1 overflow-y-auto px-6 py-7 space-y-7">
               {/* API KEY SECTION */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                  <KeyRound className="h-3 w-3" />
+              <section className="space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  <KeyRound className="h-3.5 w-3.5" />
                   Gemini API Key
                 </div>
 
                 <div
-                  className={`flex items-center gap-3 rounded-xl border bg-muted/30 px-3.5 py-3 ring-2 ring-transparent transition-all ${cfg.ring}`}
+                  className={`flex items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3 ring-2 ring-transparent transition-all ${cfg.ring}`}
                 >
                   <span
                     className={`h-2.5 w-2.5 rounded-full ${cfg.dot} flex-shrink-0`}
@@ -149,17 +138,17 @@ export function ApiKeyPopover() {
                   Get a free key from aistudio.google.com
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
-              </div>
+              </section>
 
-              <Separator />
+              <hr className="border-border" />
 
               {/* APPEARANCE SECTION */}
-              <div className="space-y-3">
-                <div className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <section className="space-y-3">
+                <div className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   Appearance
                 </div>
                 <ThemeToggle />
-              </div>
+              </section>
             </div>
           </div>
 
@@ -169,8 +158,8 @@ export function ApiKeyPopover() {
               to { opacity: 1; }
             }
             @keyframes slideInRight {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
             }
           `}</style>
         </div>
