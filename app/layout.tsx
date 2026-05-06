@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Roboto_Flex, Geist_Mono } from "next/font/google";
+import { DM_Sans, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ApiKeyProvider } from "@/components/api-key-provider";
 import { SiteHeader } from "@/components/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Roboto Flex — the actual Pixel system font (modern variable version of Roboto)
-const robotoFlex = Roboto_Flex({
+// DM Sans — closest free match to Google Sans (Google's restricted brand font)
+const dmSans = DM_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  axes: ["opsz"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${robotoFlex.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
