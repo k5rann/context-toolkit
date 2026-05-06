@@ -3,10 +3,12 @@
 import * as React from "react";
 import { Menu, KeyRound, ExternalLink } from "lucide-react";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -42,8 +44,8 @@ export function ApiKeyPopover() {
   const cfg = statusConfig[status];
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger
         className="relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-background/80 backdrop-blur-md transition-colors active:scale-95 active:bg-muted hover:bg-muted/80 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
         aria-label="Settings"
       >
@@ -51,13 +53,22 @@ export function ApiKeyPopover() {
         {status === "missing" && (
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-background animate-pulse" />
         )}
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={10}
-        className="w-[calc(100vw-24px)] sm:w-[380px] !p-5 !rounded-2xl !shadow-2xl !max-w-[440px]"
+      </SheetTrigger>
+
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md p-0 overflow-y-auto"
       >
-        <div className="space-y-5 w-full">
+        <div className="p-6 pt-12 space-y-6">
+          <div className="space-y-1">
+            <SheetTitle className="text-lg font-semibold tracking-tight">
+              Settings
+            </SheetTitle>
+            <SheetDescription className="text-sm">
+              API key and appearance for this device.
+            </SheetDescription>
+          </div>
+
           {/* API KEY SECTION */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -66,9 +77,9 @@ export function ApiKeyPopover() {
             </div>
 
             <div
-              className={`flex items-center gap-3 rounded-xl border bg-muted/30 px-3.5 py-2.5 ring-2 ring-transparent transition-all ${cfg.ring}`}
+              className={`flex items-center gap-3 rounded-xl border bg-muted/30 px-3.5 py-3 ring-2 ring-transparent transition-all ${cfg.ring}`}
             >
-              <span className={`h-2 w-2 rounded-full ${cfg.dot} flex-shrink-0`} />
+              <span className={`h-2.5 w-2.5 rounded-full ${cfg.dot} flex-shrink-0`} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium leading-tight">
                   {cfg.label}
@@ -84,17 +95,19 @@ export function ApiKeyPopover() {
               value={userKey}
               onChange={(e) => setUserKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="font-mono text-sm h-11"
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono text-base h-12"
             />
 
             <a
               href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Get a free key from aistudio.google.com
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
 
@@ -108,7 +121,7 @@ export function ApiKeyPopover() {
             <ThemeToggle />
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }
