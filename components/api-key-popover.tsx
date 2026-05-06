@@ -61,20 +61,12 @@ export function ApiKeyPopover() {
     <>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(true)}
         aria-label="Settings"
-        className={`relative inline-flex h-11 min-w-11 px-3 cursor-pointer items-center justify-center rounded-xl border border-border backdrop-blur-md transition-colors active:scale-95 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation ${
-          open
-            ? "bg-primary text-primary-foreground border-primary"
-            : "bg-background/80 active:bg-muted hover:bg-muted/80"
-        }`}
+        className="relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-background/80 backdrop-blur-md transition-colors active:scale-95 active:bg-muted hover:bg-muted/80 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
       >
-        {open ? (
-          <span className="text-xs font-bold tracking-wider">OPEN</span>
-        ) : (
-          <Menu className="h-5 w-5" />
-        )}
-        {status === "missing" && !open && (
+        <Menu className="h-5 w-5" />
+        {status === "missing" && (
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-background animate-pulse" />
         )}
       </button>
