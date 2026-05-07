@@ -28,6 +28,7 @@ type RecordingState = "idle" | "starting" | "recording";
 
 export function VoicePage() {
   const [supported, setSupported] = React.useState<boolean | null>(null);
+  const [isBrave, setIsBrave] = React.useState(false);
   const [state, setState] = React.useState<RecordingState>("idle");
   const [transcript, setTranscript] = React.useState("");
   const [interim, setInterim] = React.useState("");
@@ -40,6 +41,9 @@ export function VoicePage() {
   // Browser-support detection runs client-side after hydration.
   React.useEffect(() => {
     setSupported(isSpeechRecognitionSupported());
+    // Brave exposes navigator.brave with an async isBrave() method.
+    const nav = navigator as Navigator & { brave?: { isBrave: () => Promise<boolean> } };
+    nav.brave?.isBrave().then((result) => setIsBrave(result)).catch(() => {});
   }, []);
 
   // Cleanup on unmount.
@@ -295,6 +299,23 @@ export function VoicePage() {
         </div>
       </div>
 
+      {/* Brave warning */}
+      {isBrave && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 flex gap-3 text-sm">
+            <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="font-semibold text-foreground">Brave detected</div>
+              <p className="text-muted-foreground leading-relaxed">
+                Brave blocks Google&apos;s speech service even with Shields down. If you get a network error, switch to{" "}
+                <strong>Safari</strong> (processes audio on-device, no Google) or{" "}
+                <strong>Chrome / Edge</strong>.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Error */}
       {error && (
         <Card className="border-destructive/40 bg-destructive/5">
@@ -389,8 +410,9 @@ export function VoicePage() {
             • The transcript is editable. Fix mistakes inline before copying.
           </li>
           <li>
-            • Audio never leaves the page in the open-API path — Web Speech
-            is processed by your browser's native engine.
+            • On Safari, audio is processed on-device — nothing leaves your
+            browser. On Chrome and Edge, it&apos;s sent to Google&apos;s speech servers.
+            Brave blocks those servers by default.
           </li>
         </ul>
       </div>

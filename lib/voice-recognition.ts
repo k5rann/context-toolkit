@@ -101,7 +101,7 @@ export function describeSpeechError(code: string): string {
     case "audio-capture":
       return "No microphone found. Check that one is connected and selected as the default input.";
     case "network":
-      return "Network error. Web Speech needs an internet connection.";
+      return "Network error reaching the speech service. Brave blocks Google's speech servers by default — try switching to Safari (on-device, no Google needed) or Chrome/Edge with a normal network connection.";
     case "aborted":
       return "Recording stopped.";
     case "language-not-supported":
