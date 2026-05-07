@@ -195,8 +195,8 @@ export const TOOLS: Tool[] = [
     name: "Voice to Text",
     tagline: "Speak. See it transcribed.",
     description:
-      "Real-time speech-to-text using your browser's native engine. Zero API cost, zero rate limits. Save, edit, share.",
-    status: "soon",
+      "Real-time speech-to-text via your browser's native Web Speech engine. Zero API cost, zero rate limits, no key. 15 languages. Edit inline, copy, or download.",
+    status: "live",
     icon: "Mic",
   },
   {
