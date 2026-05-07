@@ -53,6 +53,13 @@ export interface SpeakerTurn {
 // Build the WebSocket URL for Deepgram listen endpoint.
 // nova-3 is their flagship model with diarization. interim_results gives
 // us live preview text; smart_format adds punctuation/casing.
+//
+// We DON'T pass encoding/channels/sample_rate — MediaRecorder emits a
+// WebM container with Opus inside (not raw Opus packets), and Deepgram
+// auto-detects format from the container header. Passing encoding=opus
+// here makes Deepgram try to parse the WebM header as raw Opus, which
+// fails silently and times out the connection (1011) after 10s of no
+// decoded audio.
 export function buildDeepgramUrl(language: string): string {
   const params = new URLSearchParams({
     model: "nova-3",
@@ -61,9 +68,6 @@ export function buildDeepgramUrl(language: string): string {
     interim_results: "true",
     smart_format: "true",
     punctuate: "true",
-    encoding: "opus",
-    channels: "1",
-    sample_rate: "48000",
   });
   return `wss://api.deepgram.com/v1/listen?${params.toString()}`;
 }
