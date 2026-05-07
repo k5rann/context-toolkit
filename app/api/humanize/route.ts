@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { humanize } from "@/lib/humanizer";
-import type { HumanizerTone } from "@/lib/prompts/humanizer-template";
+import type {
+  HumanizerTone,
+  HumanizerAggression,
+} from "@/lib/prompts/humanizer-template";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,12 +15,14 @@ const VALID_TONES: HumanizerTone[] = [
   "storytelling",
 ];
 
+const VALID_AGGRESSIONS: HumanizerAggression[] = ["light", "medium", "heavy"];
+
 const MAX_INPUT_CHARS = 25000;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { text, tone, apiKey: bodyKey } = body;
+    const { text, tone, aggression, apiKey: bodyKey } = body;
 
     if (!text || typeof text !== "string" || !text.trim()) {
       return NextResponse.json(
@@ -39,6 +44,12 @@ export async function POST(req: NextRequest) {
       ? (tone as HumanizerTone)
       : "casual";
 
+    const resolvedAggression: HumanizerAggression = VALID_AGGRESSIONS.includes(
+      aggression as HumanizerAggression
+    )
+      ? (aggression as HumanizerAggression)
+      : "medium";
+
     const apiKey = bodyKey || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -50,7 +61,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await humanize({ text, tone: resolvedTone, apiKey });
+    const result = await humanize({
+      text,
+      tone: resolvedTone,
+      aggression: resolvedAggression,
+      apiKey,
+    });
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

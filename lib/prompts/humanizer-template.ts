@@ -4,6 +4,37 @@ export type HumanizerTone =
   | "professional"
   | "storytelling";
 
+export type HumanizerAggression = "light" | "medium" | "heavy";
+
+export const AGGRESSIONS: Array<{
+  id: HumanizerAggression;
+  label: string;
+  short: string;
+  description: string;
+}> = [
+  {
+    id: "light",
+    label: "Light",
+    short: "2-pass · meaning-faithful",
+    description:
+      "Persona rewrite + critic. Minimal meaning drift. Best when fidelity to the original matters more than detector evasion.",
+  },
+  {
+    id: "medium",
+    label: "Medium",
+    short: "2-pass · anti-arc critic",
+    description:
+      "Persona rewrite + aggressive critic that hunts essay-arc shapes (intro setup, conclusion summary). Default.",
+  },
+  {
+    id: "heavy",
+    label: "Heavy",
+    short: "3-pass · structural surgery",
+    description:
+      "Adds an anti-arc surgery pass that drops topic-setting opening and summary closing. Real perturbation. Some meaning drift acceptable.",
+  },
+];
+
 export const TONES: Array<{
   id: HumanizerTone;
   label: string;
@@ -135,8 +166,12 @@ ${text}
 REWRITTEN TEXT (output only the rewritten text, nothing else):`;
 }
 
-export function buildCriticRevisePrompt(
-  rewritten: string,
+// Pass 2 (Heavy only): anti-arc structural surgery.
+// This is the GPTZero-killer pass. GPTZero pattern-matches the whole
+// "intro → expansion → conclusion" essay arc — even when the words are
+// human-shaped. This pass takes a hammer to that structure.
+export function buildAntiArcPrompt(
+  draft: string,
   tone: HumanizerTone,
   originalWordCount: number
 ): string {
@@ -144,7 +179,60 @@ export function buildCriticRevisePrompt(
   const minWords = Math.floor(originalWordCount * 0.85);
   const maxWords = Math.ceil(originalWordCount * 1.15);
 
-  return `You are reviewing a rewrite that is meant to read as human-written. Your job is to find any remaining "AI-shape" signals and revise ONLY the affected sentences. Do not rewrite the whole text. Return the full revised text with your fixes inline.
+  return `You are performing structural surgery on a humanized rewrite. The rewrite reads human-shaped sentence-by-sentence, but it still has the SHAPE of an AI-generated essay: a topic-setting opener, a body that expands the topic, and a conclusion that summarizes. Detectors like GPTZero pattern-match this shape regardless of vocabulary.
+
+Your job: kill the arc. Specifically:
+
+1. **No topic-setting opener.** If the first sentence "introduces" the subject ("AI is now reaching...", "Education has changed...", "X has transformed..."), CUT IT or replace with a concrete in-medias-res beat — a specific example, a number, an opinion, or a question.
+2. **No summary-shaped conclusion.** If the last paragraph or sentence summarizes ("Ultimately...", "This points to...", "As we move into...", "AI is reshaping..."), CUT IT or replace with a concrete final beat: a specific example, an aside, a fragment, a question, or a contrarian observation.
+3. **Reorder if the structure is too predictable.** If paragraph 1 = setup, paragraph 2 = benefits list, paragraph 3 = conclusion — shuffle. Lead with the most concrete paragraph. Bury the abstract one in the middle. End on a specific.
+4. **Disrupt body-paragraph topic-sentence shape.** AI essays open paragraphs with a topic sentence that previews the paragraph. Humans don't always. Open at least one paragraph mid-thought.
+5. **Inject one factual specific.** Pick the most abstract claim in the draft and replace it with a concrete example (real or plausible — but flag any invented facts to yourself; do not invent numbers or named studies).
+6. **Stay within length:** ${minWords}–${maxWords} words (target: ${originalWordCount}). If you cut, expand the surviving body to compensate. If you add, trim the abstract parts.
+
+REGISTER TO PRESERVE: ${register}
+
+DRAFT TO OPERATE ON:
+---
+${draft}
+---
+
+Output the surgically restructured text only. No commentary, no headers, no preamble.`;
+}
+
+export function buildCriticRevisePrompt(
+  rewritten: string,
+  tone: HumanizerTone,
+  originalWordCount: number,
+  aggression: HumanizerAggression = "medium"
+): string {
+  const register = TONE_REGISTER[tone];
+  const minWords = Math.floor(originalWordCount * 0.85);
+  const maxWords = Math.ceil(originalWordCount * 1.15);
+
+  const archHunt =
+    aggression === "light"
+      ? ""
+      : `
+
+ESSAY-ARC SIGNALS (${aggression === "heavy" ? "MUST FIX" : "FIX IF PRESENT"}):
+
+A. **Topic-setting opener.** "X is now reaching...", "X has transformed...", "In recent years..." — replace with a concrete in-medias-res first sentence.
+B. **Summary-shaped conclusion.** "Ultimately, X is changing...", "This points to a broader...", "As we move into...", "Looking ahead..." — cut or replace with a concrete final beat. A fragment is fine. A question is fine. A specific example is best.
+C. **Topic sentences at every paragraph open.** Open at least one paragraph mid-thought instead of with a setup.`;
+
+  const heavyExtras =
+    aggression === "heavy"
+      ? `
+
+ADDITIONAL HEAVY-MODE INJECTIONS:
+
+- End with a fragment, a question, or a specific concrete example. Never with a "this means..." synthesis.
+- One sentence in the piece should feel slightly off-topic — an aside, a parenthetical, a digression. Real humans go on tangents.
+- One word should be slightly unexpected — not jargon, just less probable. ("teachers" → "first-year teachers", "students" → "the kid in the back row", etc.)`
+      : "";
+
+  return `You are reviewing a rewrite that is meant to read as human-written. Your job is to find remaining "AI-shape" signals and revise ONLY the affected sentences. Do not rewrite the whole text. Return the full revised text with your fixes inline.
 
 AI-SHAPE SIGNALS TO HUNT:
 
@@ -155,7 +243,7 @@ AI-SHAPE SIGNALS TO HUNT:
 5. **Abstract nouns without grounding.** "Personalized learning", "broader transformation", "inclusive education" — at least one should become concrete (an example, a number, a named instance).
 6. **Predictable next-word sentences.** If a sentence reads like every word is the most-probable choice, swap one mid-sentence word for a slightly less expected (still natural) one.
 7. **No em-dashes, no fragments, no parentheticals anywhere?** Add at least one of each across the piece.
-8. **Banned phrases that survived from the rewrite step:** delve, tapestry, landscape (metaphor), realm, journey (metaphor), moreover, furthermore, additionally, in conclusion, it's important to note, navigate the complexities, underscores, foster, leverage, robust, seamless, holistic, testament, ushering, pivotal, paramount.
+8. **Banned phrases that survived from the rewrite step:** delve, tapestry, landscape (metaphor), realm, journey (metaphor), moreover, furthermore, additionally, in conclusion, it's important to note, navigate the complexities, underscores, foster, leverage, robust, seamless, holistic, testament, ushering, pivotal, paramount.${archHunt}${heavyExtras}
 
 REGISTER TO PRESERVE: ${register}
 

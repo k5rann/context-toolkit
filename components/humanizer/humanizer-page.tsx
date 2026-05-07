@@ -17,13 +17,17 @@ import { Separator } from "@/components/ui/separator";
 import { useApiKey } from "@/components/api-key-provider";
 import {
   TONES,
+  AGGRESSIONS,
   type HumanizerTone,
+  type HumanizerAggression,
 } from "@/lib/prompts/humanizer-template";
 
 interface HumanizeResult {
   output: string;
   pass1Output?: string;
+  pass2Output?: string;
   tone: HumanizerTone;
+  aggression?: HumanizerAggression;
   originalWordCount: number;
   outputWordCount: number;
   passes?: number;
@@ -35,6 +39,8 @@ export function HumanizerPage() {
   const { userKey, hasSharedKey } = useApiKey();
   const [text, setText] = React.useState("");
   const [tone, setTone] = React.useState<HumanizerTone>("casual");
+  const [aggression, setAggression] =
+    React.useState<HumanizerAggression>("medium");
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<HumanizeResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -68,6 +74,7 @@ export function HumanizerPage() {
         body: JSON.stringify({
           text,
           tone,
+          aggression,
           apiKey: userKey || undefined,
         }),
       });
@@ -162,6 +169,39 @@ export function HumanizerPage() {
         </div>
       </div>
 
+      {/* Aggression dial */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          Aggression · meaning fidelity ↔ detector evasion
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          {AGGRESSIONS.map((a) => {
+            const active = aggression === a.id;
+            return (
+              <button
+                key={a.id}
+                onClick={() => setAggression(a.id)}
+                className={`text-left p-3 rounded-xl border transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                    : "border-border/60 bg-muted/10 hover:border-border hover:bg-muted/30"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted-foreground/30"}`}
+                  />
+                  <div className="font-semibold text-sm">{a.label}</div>
+                </div>
+                <div className="text-xs text-muted-foreground leading-snug font-mono">
+                  {a.short}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Input + Output */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input */}
@@ -242,7 +282,9 @@ export function HumanizerPage() {
               <CardContent className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <div className="text-sm">
-                  Two-pass rewrite in {tone} voice — drafting then revising...
+                  {aggression === "heavy"
+                    ? `Three-pass surgery in ${tone} voice — drafting, restructuring, revising...`
+                    : `Two-pass rewrite in ${tone} voice — drafting then revising...`}
                 </div>
               </CardContent>
             </Card>
@@ -256,6 +298,7 @@ export function HumanizerPage() {
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 bg-muted/40">
                   <span className="text-xs font-mono text-muted-foreground">
                     {result.tone} voice
+                    {result.aggression ? ` · ${result.aggression}` : ""}
                     {result.passes ? ` · ${result.passes}-pass` : ""} ·{" "}
                     {result.outputWordCount} words
                   </span>
