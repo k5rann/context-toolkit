@@ -22,9 +22,11 @@ import {
 
 interface HumanizeResult {
   output: string;
+  pass1Output?: string;
   tone: HumanizerTone;
   originalWordCount: number;
   outputWordCount: number;
+  passes?: number;
 }
 
 const MAX_CHARS = 25000;
@@ -120,9 +122,10 @@ export function HumanizerPage() {
           Text Humanizer
         </h1>
         <p className="text-muted-foreground">
-          AI text in. Human-readable out. Picks up on AI fingerprints
-          (delve, tapestry, parallel structures) and rewrites them with
-          natural rhythm, contractions, and personal voice.
+          AI text in. Human-readable out. Two-pass rewrite — first a
+          persona-led draft, then a critic pass that hunts surviving
+          AI-shape signals (uniform burstiness, abstract nouns, conclusion
+          shapes) and revises them out.
         </p>
       </div>
 
@@ -238,7 +241,9 @@ export function HumanizerPage() {
             <Card className="border-border/60">
               <CardContent className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <div className="text-sm">Rewriting in {tone} voice...</div>
+                <div className="text-sm">
+                  Two-pass rewrite in {tone} voice — drafting then revising...
+                </div>
               </CardContent>
             </Card>
           )}
@@ -250,7 +255,9 @@ export function HumanizerPage() {
               <div className="rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 bg-muted/40">
                   <span className="text-xs font-mono text-muted-foreground">
-                    {result.tone} voice · {result.outputWordCount} words
+                    {result.tone} voice
+                    {result.passes ? ` · ${result.passes}-pass` : ""} ·{" "}
+                    {result.outputWordCount} words
                   </span>
                   <Button
                     variant="ghost"
@@ -308,10 +315,10 @@ function EmptyState({ hasKey }: { hasKey: boolean }) {
         <Separator />
         <ul className="space-y-2 text-sm text-muted-foreground">
           {[
+            "Pass 1: persona-led rewrite (varies burstiness + perplexity)",
+            "Pass 2: critic hunts surviving AI shape, revises in place",
             "Strips AI-tells (delve, tapestry, moreover, etc.)",
-            "Varies sentence length aggressively",
-            "Adds contractions and natural rhythm",
-            "Preserves all factual claims and structure",
+            "Preserves facts, names, numbers, structure",
           ].map((line, i) => (
             <li key={i} className="flex gap-2 items-start">
               <span className="text-emerald-500 mt-0.5">✓</span>
