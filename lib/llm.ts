@@ -11,11 +11,26 @@ const GEMINI_FALLBACK_CHAIN = [
   "gemini-2.0-flash",
 ];
 
-function isRateLimitError(err: unknown): boolean {
+// Triggers a fallback to the next model in the chain. Covers:
+//   - 429 / quota / rate limit (per-model daily or per-minute limits)
+//   - 503 / service unavailable / overloaded / high demand (upstream load)
+//   - 500 / 502 / 504 (transient upstream errors)
+function shouldFallback(err: unknown): boolean {
   const s = String(err).toLowerCase();
-  return ["429", "resource_exhausted", "quota", "rate limit"].some((t) =>
-    s.includes(t)
-  );
+  return [
+    "429",
+    "resource_exhausted",
+    "quota",
+    "rate limit",
+    "503",
+    "service unavailable",
+    "overloaded",
+    "high demand",
+    "500",
+    "502",
+    "504",
+    "unavailable",
+  ].some((t) => s.includes(t));
 }
 
 export interface GenerateOptions {
@@ -39,7 +54,7 @@ export async function generate({
   const chain = [primary, ...GEMINI_FALLBACK_CHAIN.filter((m) => m !== primary)];
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const rateLimited: string[] = [];
+  const skipped: string[] = [];
   let lastErr: unknown = null;
 
   for (const modelName of chain) {
@@ -48,8 +63,8 @@ export async function generate({
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (err) {
-      if (isRateLimitError(err)) {
-        rateLimited.push(modelName);
+      if (shouldFallback(err)) {
+        skipped.push(modelName);
         lastErr = err;
         continue;
       }
@@ -57,7 +72,9 @@ export async function generate({
     }
   }
 
+  const lastMessage =
+    lastErr instanceof Error ? lastErr.message : String(lastErr);
   throw new Error(
-    `All free-tier Gemini models hit rate limits.\nTried: ${rateLimited.join(", ")}\nDaily quotas reset at midnight Pacific time.`
+    `All free-tier Gemini models unavailable (rate-limited or overloaded).\nTried: ${skipped.join(", ")}\nLast error: ${lastMessage}\nQuotas reset at midnight Pacific time. Overload usually clears in a few minutes.`
   );
 }
