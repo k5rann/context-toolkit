@@ -107,6 +107,18 @@ const ANTI_PATTERN_INJECTION = `HUMAN-SHAPE INJECTIONS (use at least THREE of th
 - Use one rhythm-breaker: a colon, a semicolon, or a question
 - One word that's slightly unusual — not jargon, just specific (e.g. "lopsided" instead of "uneven", "wedged" instead of "stuck")`;
 
+// Heavy mode strips structural AI-tells that lighter modes intentionally
+// leave in. Copyleaks specifically pattern-matches em-dash / parenthetical
+// frequency and sentence-initial hedges, while Quillbot/ZeroGPT don't
+// penalize them as hard. Heavy mode trades some "aliveness" for stealth.
+const STRUCTURAL_BANS_HEAVY = `STRUCTURAL BANS (Heavy mode — non-negotiable, override the persona where they conflict):
+
+- NO em-dashes (—) anywhere. Use a period or comma instead. The "mid-sentence em-dash interjection" injection above does NOT apply on Heavy — pick three other injections.
+- NO parenthetical asides (text like this). Drop them, or fold the content into the main sentence using a comma.
+- NO asterisk-emphasis like *this* or **this**. Use plain text only.
+- AT MOST ONE sentence-initial hedge ("Honestly,", "Seriously,", "Look,", "Hey,", "Truthfully,", "Literally,") across the ENTIRE piece — not per paragraph.
+- NO ellipses for stylistic pauses (...).`;
+
 const ABSOLUTE_BANS = `ABSOLUTE BANS — these phrases must NOT appear in the output, no exceptions:
 
 - delve, delving, delved
@@ -141,17 +153,20 @@ const STRUCTURAL_RULES = `STRUCTURAL RULES (non-negotiable):
 
 export function buildRewritePrompt(
   text: string,
-  tone: HumanizerTone
+  tone: HumanizerTone,
+  aggression: HumanizerAggression = "medium"
 ): string {
   const persona = PERSONAS[tone];
   const register = TONE_REGISTER[tone];
+  const heavyBans =
+    aggression === "heavy" ? `\n\n${STRUCTURAL_BANS_HEAVY}` : "";
   return `${persona}
 
 Your task: rewrite the AI-generated text below in your voice. The result must read as if a person wrote it, not a model. Detectors look at perplexity (predictable next words) and burstiness (sentence-length variance) — your job is to disrupt both while preserving the meaning.
 
 ${STRUCTURAL_RULES}
 
-${ABSOLUTE_BANS}
+${ABSOLUTE_BANS}${heavyBans}
 
 ${ANTI_PATTERN_INJECTION}
 
@@ -189,6 +204,7 @@ Your job: kill the arc. Specifically:
 4. **Disrupt body-paragraph topic-sentence shape.** AI essays open paragraphs with a topic sentence that previews the paragraph. Humans don't always. Open at least one paragraph mid-thought.
 5. **Inject one factual specific.** Pick the most abstract claim in the draft and replace it with a concrete example (real or plausible — but flag any invented facts to yourself; do not invent numbers or named studies).
 6. **Stay within length:** ${minWords}–${maxWords} words (target: ${originalWordCount}). If you cut, expand the surviving body to compensate. If you add, trim the abstract parts.
+7. **Structural punctuation bans (Heavy mode):** NO em-dashes, NO parenthetical asides, NO asterisk-emphasis, NO ellipses for pause. Replace with periods/commas or fold into the sentence. These are AI-tells that Copyleaks specifically pattern-matches.
 
 REGISTER TO PRESERVE: ${register}
 
@@ -228,8 +244,17 @@ C. **Topic sentences at every paragraph open.** Open at least one paragraph mid-
 ADDITIONAL HEAVY-MODE INJECTIONS:
 
 - End with a fragment, a question, or a specific concrete example. Never with a "this means..." synthesis.
-- One sentence in the piece should feel slightly off-topic — an aside, a parenthetical, a digression. Real humans go on tangents.
-- One word should be slightly unexpected — not jargon, just less probable. ("teachers" → "first-year teachers", "students" → "the kid in the back row", etc.)`
+- One sentence in the piece should feel slightly off-topic — an aside or a digression. Real humans go on tangents. (Render as a separate sentence, NOT in parentheses — see structural bans below.)
+- One word should be slightly unexpected — not jargon, just less probable. ("teachers" → "first-year teachers", "students" → "the kid in the back row", etc.)
+
+HEAVY-MODE STRUCTURAL STRIP (mandatory final scrub — do this BEFORE returning):
+
+- Remove EVERY em-dash (—). Replace with a period or comma. Do not leave a single one.
+- Remove EVERY parenthetical aside (text in brackets). Drop the content or fold it into the sentence with a comma.
+- Remove EVERY asterisk-emphasis (*word* or **word**). Use plain text.
+- Remove stylistic ellipses (...). Use a period.
+- Cap sentence-initial hedges ("Honestly,", "Seriously,", "Look,", "Truthfully,", "Literally,") at ONE total. Strip the rest.
+- These survive Quillbot/ZeroGPT but Copyleaks pattern-matches them — stripping is non-negotiable on Heavy.`
       : "";
 
   return `You are reviewing a rewrite that is meant to read as human-written. Your job is to find remaining "AI-shape" signals and revise ONLY the affected sentences. Do not rewrite the whole text. Return the full revised text with your fixes inline.

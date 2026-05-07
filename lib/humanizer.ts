@@ -75,7 +75,7 @@ export async function humanize({
   // Pass 1: persona rewrite (every aggression level).
   const pass1Raw = await generate({
     apiKey,
-    prompt: buildRewritePrompt(trimmed, tone),
+    prompt: buildRewritePrompt(trimmed, tone, aggression),
     preferredModel: REWRITE_MODEL,
   });
   const pass1Output = clean(pass1Raw);
