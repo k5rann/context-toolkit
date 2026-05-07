@@ -203,10 +203,10 @@ export const TOOLS: Tool[] = [
     id: "conference",
     href: "/conference",
     name: "Conference Notes",
-    tagline: "Listen all session. Get clean notes.",
+    tagline: "Multi-speaker. Color-coded transcript.",
     description:
-      "Continuous listening with smart highlighting. Auto-extracts decisions, action items, key quotes from meetings and lectures.",
-    status: "soon",
+      "Real-time diarization via Deepgram Nova-3. Auto-detects who's speaking and color-codes each voice. Live transcript, copy or download when done.",
+    status: "live",
     icon: "Notebook",
   },
 ];
