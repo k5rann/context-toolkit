@@ -121,9 +121,10 @@ export function ConferencePage() {
       if (!token) throw new Error("Token endpoint returned empty token");
 
       // 2. Open the WebSocket to Deepgram. Browsers can't set Authorization
-      // headers on WS, so we use the Sec-WebSocket-Protocol subprotocol form
-      // that Deepgram supports: ["token", "<the_token>"].
-      const ws = new WebSocket(buildDeepgramUrl(language), ["token", token]);
+      // headers on WS, so Deepgram supports auth via Sec-WebSocket-Protocol.
+      // Long-lived API keys: ["token", <key>]. Short-lived auth/grant
+      // tokens are Bearer tokens, so they go in as ["bearer", <token>].
+      const ws = new WebSocket(buildDeepgramUrl(language), ["bearer", token]);
       wsRef.current = ws;
 
       ws.onopen = async () => {
@@ -199,9 +200,17 @@ export function ConferencePage() {
         // Code 1000 = clean close. Anything else after recording started
         // probably means the server closed on us (auth expired, network hiccup).
         if (!userStoppedRef.current && event.code !== 1000) {
-          setError(
-            `Connection dropped (code ${event.code}). ${event.reason || "Tap the mic to reconnect."}`
-          );
+          // Code 1006 specifically means abnormal close with no close frame —
+          // usually an auth rejection. Give the user a more useful hint.
+          if (event.code === 1006) {
+            setError(
+              "Connection rejected by Deepgram (1006). Most likely the API key doesn't have the required scopes. Make sure your Deepgram key has the Owner role."
+            );
+          } else {
+            setError(
+              `Connection dropped (code ${event.code}). ${event.reason || "Tap the mic to reconnect."}`
+            );
+          }
         }
         cleanup();
         setState("idle");
