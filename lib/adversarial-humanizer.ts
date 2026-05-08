@@ -7,16 +7,15 @@
 // detector signal transfers reasonably well to other detectors of the
 // same family (transformer classifiers fine-tuned on AI/human pairs).
 //
-// v1: single iteration, parallel candidate generation. Fits comfortably
-// in Vercel's 60s maxDuration. If results are close-but-not-there we
-// can add a second iteration as v2.
+// v2 update: dual-provider — adversarial loop now supports either Gemini
+// or any OpenRouter model (e.g. MiniMax). Different model fingerprints
+// give us more shots at content-shape walls Copyleaks pattern-matches
+// (essay-shape resists Gemini-adversarial; MiniMax-adversarial may break
+// it).
 
 import { scoreWithDetector, type DetectorScore } from "./hf-detector";
-import {
-  buildAdversarialPrompt,
-  type HumanizerContentMode,
-} from "./prompts/humanizer-template";
-import type { HumanizerReferenceStyle } from "./humanizer-reference-library";
+import { buildAdversarialPrompt } from "./prompts/humanizer-template";
+import { generateOpenRouter } from "./openrouter";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // 5 temperatures spread across the diversity range. Low temps produce
@@ -24,16 +23,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // randomness (which lowers detector confidence but risks meaning drift).
 // We let the detector decide which point is best for THIS specific text.
 const TEMPERATURES = [0.6, 0.85, 1.0, 1.15, 1.3];
-const REWRITE_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
+
+export type AdversarialProvider = "gemini" | "openrouter";
 
 export interface AdversarialOptions {
   text: string;
-  contentMode: HumanizerContentMode;
-  referenceStyle: HumanizerReferenceStyle;
-  writingSample?: string;
-  sourceNotes?: string;
-  geminiApiKey: string;
+  provider: AdversarialProvider;
   hfApiKey: string;
+  // Only one of these is required, depending on provider:
+  geminiApiKey?: string;
+  openrouterApiKey?: string;
+  openrouterModel?: string; // e.g. "minimax/minimax-m2.5:free"
 }
 
 export interface AdversarialCandidate {
@@ -49,6 +50,7 @@ export interface AdversarialResult {
   output: string;
   bestIdx: number;
   detectorModel: string;
+  generatorModel: string;
   candidates: AdversarialCandidate[];
   meta: {
     candidatesGenerated: number;
@@ -57,27 +59,39 @@ export interface AdversarialResult {
   };
 }
 
-async function generateCandidate(
+async function generateGeminiCandidate(
   prompt: string,
   temperature: number,
   apiKey: string
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: REWRITE_MODEL,
+    model: GEMINI_MODEL,
     generationConfig: { temperature },
   });
   const result = await model.generateContent(prompt);
   return result.response.text().trim();
 }
 
+async function generateOpenRouterCandidate(
+  prompt: string,
+  temperature: number,
+  apiKey: string,
+  model: string
+): Promise<string> {
+  return generateOpenRouter({ apiKey, prompt, model, temperature });
+}
+
 function stripPreamble(s: string): string {
   return s
     .replace(
-      /^(?:here(?:'s| is)?\s+(?:the\s+)?(?:rewritten|revised|edited|polished|final)[^\n:]*:?\s*)/i,
+      /^(?:here(?:'s| is)?\s+(?:the\s+)?(?:rewritten|revised|edited|polished|final|paraphrased)[^\n:]*:?\s*)/i,
       ""
     )
-    .replace(/^(?:rewritten|revised|edited|polished|final)(?:\s+text)?\s*:\s*/i, "")
+    .replace(
+      /^(?:rewritten|revised|edited|polished|final|paraphrased)(?:\s+text)?\s*:\s*/i,
+      ""
+    )
     .replace(/^output\s*:\s*/i, "")
     .replace(/^["'“]/, "")
     .replace(/["'”]$/, "")
@@ -88,19 +102,38 @@ export async function humanizeAdversarial(
   opts: AdversarialOptions
 ): Promise<AdversarialResult> {
   const startedAt = Date.now();
-
-  // Adversarial uses its own prompt — the voice-rewrite prompt biases too
-  // hard toward compression for our test (it lost 60% of input length).
-  // Adversarial path is purely about paraphrase + length + perplexity
-  // disruption. contentMode/referenceStyle/writingSample are intentionally
-  // ignored here; they belong to the voice-matching humanizer flow.
   const originalWordCount = opts.text.trim().split(/\s+/).filter(Boolean).length;
   const prompt = buildAdversarialPrompt(opts.text, originalWordCount);
+
+  // Validate the right keys are present for the selected provider.
+  if (opts.provider === "gemini" && !opts.geminiApiKey) {
+    throw new Error("Gemini provider needs geminiApiKey.");
+  }
+  if (opts.provider === "openrouter") {
+    if (!opts.openrouterApiKey) {
+      throw new Error("OpenRouter provider needs openrouterApiKey.");
+    }
+    if (!opts.openrouterModel) {
+      throw new Error("OpenRouter provider needs openrouterModel.");
+    }
+  }
+
+  const generatorLabel =
+    opts.provider === "gemini" ? GEMINI_MODEL : opts.openrouterModel ?? "openrouter";
 
   // Generate all candidates in parallel. If any one fails we still
   // proceed with the rest — better to score 4 than fail the whole run.
   const generations = await Promise.allSettled(
-    TEMPERATURES.map((t) => generateCandidate(prompt, t, opts.geminiApiKey))
+    TEMPERATURES.map((t) =>
+      opts.provider === "gemini"
+        ? generateGeminiCandidate(prompt, t, opts.geminiApiKey!)
+        : generateOpenRouterCandidate(
+            prompt,
+            t,
+            opts.openrouterApiKey!,
+            opts.openrouterModel!
+          )
+    )
   );
 
   const draftCandidates: Array<{
@@ -127,9 +160,9 @@ export async function humanizeAdversarial(
 
   const generatedCount = draftCandidates.filter((c) => c.generationOk).length;
   if (generatedCount === 0) {
+    const firstErr = draftCandidates[0]?.errorMessage ?? "no detail";
     throw new Error(
-      "All candidate generations failed. " +
-        (draftCandidates[0]?.errorMessage ?? "Check Gemini key and quota.")
+      `All ${TEMPERATURES.length} candidate generations failed (${generatorLabel}). First error: ${firstErr}`
     );
   }
 
@@ -179,6 +212,7 @@ export async function humanizeAdversarial(
       output: fallback.text,
       bestIdx: idx,
       detectorModel: candidates[0]?.detectorScore.model ?? "unknown",
+      generatorModel: generatorLabel,
       candidates,
       meta: {
         candidatesGenerated: generatedCount,
@@ -200,6 +234,7 @@ export async function humanizeAdversarial(
     output: best.text,
     bestIdx,
     detectorModel: best.detectorScore.model,
+    generatorModel: generatorLabel,
     candidates,
     meta: {
       candidatesGenerated: generatedCount,

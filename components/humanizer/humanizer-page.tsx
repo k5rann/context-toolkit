@@ -90,6 +90,13 @@ const PRESET_CHIPS: PresetChip[] = [
     hint: "5 Gemini candidates · scored vs detector · lowest wins · ~25s",
     experimental: true,
   },
+  {
+    id: "adversarial-minimax",
+    label: "Adversarial-MiniMax",
+    hint: "5 MiniMax candidates · scored vs detector · best shot at essay-shape Copyleaks wall · ~25s",
+    experimental: true,
+    experimentalNeedsServerKey: true,
+  },
 ];
 
 function isExperimentalPreset(preset: HumanizerModelPreset): boolean {

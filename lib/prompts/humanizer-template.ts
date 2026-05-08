@@ -18,7 +18,8 @@ export type HumanizerModelPreset =
   | "experimental-llama"
   | "experimental-qwen"
   | "experimental-minimax"
-  | "adversarial";
+  | "adversarial"
+  | "adversarial-minimax";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -124,6 +125,13 @@ export const MODEL_PRESETS: Array<{
     short: "5 candidates, scored, lowest wins",
     description:
       "NeurIPS-2025-style detector-guided paraphrasing. Generates 5 Gemini candidates at varied temperatures, scores each against a HuggingFace AI-detector model, returns the lowest-AI-score winner. Highest detector-evasion mode but slower (~25s). Surrogate detector ≠ Copyleaks, results may not transfer perfectly.",
+  },
+  {
+    id: "adversarial-minimax",
+    label: "Adversarial-MiniMax",
+    short: "5 MiniMax candidates, scored, lowest wins",
+    description:
+      "Adversarial loop using MiniMax-m2.5 instead of Gemini. MiniMax's Chinese-model fingerprint defeats Copyleaks on product-shape content; combining it with detector-guided selection is the best free shot at the essay-shape wall.",
   },
 ];
 

@@ -30,6 +30,7 @@ const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
   "experimental-qwen",
   "experimental-minimax",
   "adversarial",
+  "adversarial-minimax",
 ];
 
 const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
@@ -38,12 +39,17 @@ const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
   "experimental-minimax",
 ];
 
+const ADVERSARIAL_PRESETS: HumanizerModelPreset[] = [
+  "adversarial",
+  "adversarial-minimax",
+];
+
 function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
   return EXPERIMENTAL_PRESETS.includes(preset);
 }
 
 function isAdversarialPreset(preset: HumanizerModelPreset): boolean {
-  return preset === "adversarial";
+  return ADVERSARIAL_PRESETS.includes(preset);
 }
 const VALID_REFERENCE_STYLES = REFERENCE_STYLES.map((style) => style.id);
 
@@ -172,6 +178,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (
+      resolvedPreset === "adversarial-minimax" &&
+      !process.env.OPENROUTER_API_KEY
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Adversarial-MiniMax mode requires OPENROUTER_API_KEY on the server. Add it in Vercel env vars.",
+        },
+        { status: 500 }
+      );
+    }
+
     if (!usingExperimental && !apiKey) {
       return NextResponse.json(
         {
@@ -189,17 +208,37 @@ export async function POST(req: NextRequest) {
     );
 
     if (usingAdversarial) {
-      // Adversarial path: 5 candidates × Gemini at varied temps, scored by
-      // HuggingFace surrogate detector, lowest-AI-score wins. Wrap into the
-      // same response shape the UI expects, plus an `adversarial` block.
+      // Adversarial path: 5 candidates at varied temps, scored by HuggingFace
+      // surrogate detector, lowest-AI-score wins. Wrap into the same response
+      // shape the UI expects, plus an `adversarial` block.
+      //
+      // Provider depends on the preset:
+      //   adversarial          → Gemini candidates (uses BYO Gemini key)
+      //   adversarial-minimax  → MiniMax candidates via OpenRouter (server key)
+      const isMinimax = resolvedPreset === "adversarial-minimax";
+
+      // For adversarial-minimax we don't need the user's Gemini key.
+      // The earlier `apiKey` resolution may have set it to a placeholder
+      // (since this preset isn't in EXPERIMENTAL_PRESETS for the OpenRouter
+      // bypass list). Re-validate the user has a Gemini key for plain
+      // `adversarial` mode only.
+      if (!isMinimax && !apiKey) {
+        return NextResponse.json(
+          {
+            error:
+              "Adversarial mode (Gemini) requires your Gemini key. Add it via the menu (top-right) or pick Adversarial-MiniMax which uses the server's OpenRouter key.",
+          },
+          { status: 400 }
+        );
+      }
+
       const adv = await humanizeAdversarial({
         text,
-        contentMode: resolvedContentMode,
-        referenceStyle: resolvedReferenceStyle,
-        writingSample: sample,
-        sourceNotes: notes,
-        geminiApiKey: apiKey,
+        provider: isMinimax ? "openrouter" : "gemini",
         hfApiKey: process.env.HUGGINGFACE_API_KEY!,
+        geminiApiKey: isMinimax ? undefined : apiKey,
+        openrouterApiKey: isMinimax ? process.env.OPENROUTER_API_KEY : undefined,
+        openrouterModel: isMinimax ? "minimax/minimax-m2.5:free" : undefined,
       });
       const wordCount = adv.output.split(/\s+/).filter(Boolean).length;
       const originalWordCount = text.split(/\s+/).filter(Boolean).length;
@@ -208,7 +247,7 @@ export async function POST(req: NextRequest) {
         pass1Output: adv.output,
         contentMode: resolvedContentMode,
         referenceStyle: resolvedReferenceStyle,
-        modelPreset: "adversarial",
+        modelPreset: resolvedPreset,
         originalWordCount,
         outputWordCount: wordCount,
         passes: 1,
@@ -225,6 +264,7 @@ export async function POST(req: NextRequest) {
             (1 - adv.candidates[adv.bestIdx].detectorScore.aiProbability) * 100
           ),
           notes: [
+            `Generator: ${adv.generatorModel}`,
             `Surrogate detector: ${adv.detectorModel}`,
             `Best candidate AI-probability: ${(adv.candidates[adv.bestIdx].detectorScore.aiProbability * 100).toFixed(1)}%`,
             `Generated ${adv.meta.candidatesGenerated}/5, scored ${adv.meta.candidatesScored}/5 in ${(adv.meta.elapsedMs / 1000).toFixed(1)}s`,

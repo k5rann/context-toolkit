@@ -49,11 +49,14 @@ const PRESET_MODELS: Record<
   "experimental-minimax": {
     rewriteModel: "minimax/minimax-m2.5:free",
   },
-  // Adversarial preset is dispatched in the API route directly to
-  // humanizeAdversarial — it never reaches this map. Stub entry exists
+  // Adversarial presets are dispatched in the API route directly to
+  // humanizeAdversarial — they never reach this map. Stub entries exist
   // only so the Record<HumanizerModelPreset, ...> type stays exhaustive.
   adversarial: {
     rewriteModel: "gemini-2.5-flash",
+  },
+  "adversarial-minimax": {
+    rewriteModel: "minimax/minimax-m2.5:free",
   },
 };
 
