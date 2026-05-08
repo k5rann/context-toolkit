@@ -12,12 +12,63 @@
 // can add a second iteration as v2.
 
 import { scoreWithDetector, type DetectorScore } from "./hf-detector";
-import {
-  buildVoiceRewritePrompt,
-  type HumanizerContentMode,
-} from "./prompts/humanizer-template";
+import type { HumanizerContentMode } from "./prompts/humanizer-template";
 import type { HumanizerReferenceStyle } from "./humanizer-reference-library";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Adversarial-specific prompt. NOT the same as the voice-rewrite prompt —
+// the voice-rewrite path is designed for "personal voice + remove filler"
+// which actively compresses output 50-60%. For our detector-evasion test
+// we need pure paraphrase + meaning preservation + length preservation.
+function buildAdversarialPrompt(text: string, originalWordCount: number): string {
+  const minWords = Math.max(50, Math.floor(originalWordCount * 0.9));
+  const maxWords = Math.ceil(originalWordCount * 1.2);
+
+  return `You are paraphrasing AI-generated text to make it read like a human wrote it, while preserving every fact and idea from the original.
+
+CRITICAL OBJECTIVES (in priority order):
+
+1. LENGTH PRESERVATION (mandatory):
+   - Output must be ${minWords}-${maxWords} words. Target: ${originalWordCount} words.
+   - DO NOT summarize. DO NOT compress. DO NOT cut points.
+   - If you replace something, swap it for equivalent length, not less.
+
+2. MEANING PRESERVATION:
+   - Every distinct claim, fact, name, number, and idea in the original must appear in the output.
+   - If the original has 5 ideas in 5 sentences, your output should have 5 ideas across roughly 5-7 sentences.
+
+3. VOICE: natural human prose. Not corporate marketing-speak. Not stiff academic. Imagine a smart, articulate person explaining the same thing in their own words.
+
+4. PERPLEXITY DISRUPTION (this is what beats AI detectors):
+   - Vary sentence length aggressively — mix short punchy sentences with longer layered ones
+   - Vary sentence openings — no three sentences in a row with the same starting pattern
+   - Swap predictable next-words for less probable but still natural alternatives
+   - Use contractions where they fit ("it's", "doesn't", "you're")
+   - Use occasional fragments. For emphasis. They're fine.
+
+5. AVOID these AI-tells:
+   - delve, tapestry, realm, journey (as metaphor), embark on a journey
+   - moreover, furthermore, additionally, in conclusion, in summary
+   - it's important to note, it's worth noting, it's crucial
+   - navigate the complexities, navigate the nuances
+   - robust, seamless, holistic, multifaceted, comprehensive (as default adjectives)
+   - leverage (as a verb), foster, ushering in, pivotal, paramount
+   - testament to, stands as a testament
+   - "in today's [fast-paced / digital] world", "in recent years", "in the realm of"
+   - "not just X, but also Y" constructions
+   - cutting-edge, state-of-the-art, world-class, best-in-class
+
+6. OUTPUT FORMAT:
+   - Output ONLY the paraphrased text.
+   - No preamble, no labels like "Paraphrased:", no quotation marks wrapping the output, no commentary.
+
+ORIGINAL TEXT:
+---
+${text}
+---
+
+PARAPHRASED TEXT (${minWords}-${maxWords} words):`;
+}
 
 // 5 temperatures spread across the diversity range. Low temps produce
 // safer, more probable text (which detectors flag); high temps add
@@ -89,23 +140,13 @@ export async function humanizeAdversarial(
 ): Promise<AdversarialResult> {
   const startedAt = Date.now();
 
-  // Length guard. The base voice-rewrite prompt biases toward compression
-  // for "business"/"phrase" content modes, which kills our adversarial test
-  // (Copyleaks requires 350+ chars to score). Append an explicit floor so
-  // candidates preserve length close to the input.
+  // Adversarial uses its own prompt — the voice-rewrite prompt biases too
+  // hard toward compression for our test (it lost 60% of input length).
+  // Adversarial path is purely about paraphrase + length + perplexity
+  // disruption. contentMode/referenceStyle/writingSample are intentionally
+  // ignored here; they belong to the voice-matching humanizer flow.
   const originalWordCount = opts.text.trim().split(/\s+/).filter(Boolean).length;
-  const minWords = Math.max(50, Math.floor(originalWordCount * 0.9));
-  const maxWords = Math.ceil(originalWordCount * 1.2);
-  const lengthConstraint = `\n\nMANDATORY LENGTH RULE (overrides any compression bias from the content mode):\n- Output must be between ${minWords} and ${maxWords} words. Target: ${originalWordCount} words.\n- Do NOT shorten the input. Preserve every distinct point. Replace generic phrases with grounded specifics rather than cutting them.\n- If the original has 5 ideas, the rewrite must have 5 ideas, not 2 or 3.`;
-
-  const prompt =
-    buildVoiceRewritePrompt({
-      text: opts.text,
-      contentMode: opts.contentMode,
-      referenceStyle: opts.referenceStyle,
-      writingSample: opts.writingSample,
-      sourceNotes: opts.sourceNotes,
-    }) + lengthConstraint;
+  const prompt = buildAdversarialPrompt(opts.text, originalWordCount);
 
   // Generate all candidates in parallel. If any one fails we still
   // proceed with the rest — better to score 4 than fail the whole run.
