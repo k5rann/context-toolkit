@@ -105,7 +105,10 @@ export async function scoreWithDetector({
   // Most marketing/blog inputs are well under that, but trim defensively.
   const trimmed = text.slice(0, 1800);
 
-  const url = `https://api-inference.huggingface.co/models/${model}`;
+  // HuggingFace deprecated the classic api-inference.huggingface.co endpoint
+  // and migrated to the "Inference Providers" router. The new path returns
+  // the same response shape ([[{label, score}, ...]]) for classifier models.
+  const url = `https://router.huggingface.co/hf-inference/models/${model}`;
   let lastErr: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
