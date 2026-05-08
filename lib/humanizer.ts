@@ -1,11 +1,20 @@
 import { generate } from "./llm";
 import {
+  buildAdversarialPrompt,
   buildQualityPolishPrompt,
   buildVoiceRewritePrompt,
   HumanizerContentMode,
   HumanizerModelPreset,
 } from "./prompts/humanizer-template";
 import type { HumanizerReferenceStyle } from "./humanizer-reference-library";
+
+function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
+  return (
+    preset === "experimental-llama" ||
+    preset === "experimental-qwen" ||
+    preset === "experimental-minimax"
+  );
+}
 
 const PRESET_MODELS: Record<
   HumanizerModelPreset,
@@ -385,15 +394,25 @@ export async function humanize({
   const originalWordCount = wordCount(trimmed);
   const preset = PRESET_MODELS[modelPreset] ?? PRESET_MODELS.balanced;
 
+  // Experimental OpenRouter presets use the length-preserving adversarial
+  // prompt. The voice-rewrite prompt was compressing 60% of input length
+  // when paired with non-Gemini models, producing junk output too short to
+  // actually test on detectors. Adversarial-style prompt enforces a hard
+  // length floor so the test is meaningful.
+  const useAdversarialPrompt = isExperimentalPreset(modelPreset);
+  const pass1Prompt = useAdversarialPrompt
+    ? buildAdversarialPrompt(trimmed, originalWordCount)
+    : buildVoiceRewritePrompt({
+        text: trimmed,
+        contentMode,
+        referenceStyle,
+        writingSample,
+        sourceNotes,
+      });
+
   const pass1Raw = await generate({
     apiKey,
-    prompt: buildVoiceRewritePrompt({
-      text: trimmed,
-      contentMode,
-      referenceStyle,
-      writingSample,
-      sourceNotes,
-    }),
+    prompt: pass1Prompt,
     preferredModel: preset.rewriteModel,
   });
   const pass1Output = clean(pass1Raw);

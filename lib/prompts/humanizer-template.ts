@@ -253,6 +253,66 @@ ${text}
 REWRITTEN TEXT:`;
 }
 
+// Adversarial / non-Gemini paraphrasing prompt. Used by:
+//   - Adversarial preset (5 Gemini candidates at varied temps)
+//   - Experimental OpenRouter presets (Llama / Qwen / MiniMax single-pass)
+//
+// This intentionally drops the voice-matching machinery (contentMode,
+// referenceStyle, writingSample). Different objective: pure paraphrase
+// with strict length preservation + perplexity disruption.
+export function buildAdversarialPrompt(
+  text: string,
+  originalWordCount: number
+): string {
+  const minWords = Math.max(50, Math.floor(originalWordCount * 0.9));
+  const maxWords = Math.ceil(originalWordCount * 1.2);
+
+  return `You are paraphrasing AI-generated text to make it read like a human wrote it, while preserving every fact and idea from the original.
+
+CRITICAL OBJECTIVES (in priority order):
+
+1. LENGTH PRESERVATION (mandatory):
+   - Output must be ${minWords}-${maxWords} words. Target: ${originalWordCount} words.
+   - DO NOT summarize. DO NOT compress. DO NOT cut points.
+   - If you replace something, swap it for equivalent length, not less.
+
+2. MEANING PRESERVATION:
+   - Every distinct claim, fact, name, number, and idea in the original must appear in the output.
+   - If the original has 5 ideas in 5 sentences, your output should have 5 ideas across roughly 5-7 sentences.
+
+3. VOICE: natural human prose. Not corporate marketing-speak. Not stiff academic. Imagine a smart, articulate person explaining the same thing in their own words.
+
+4. PERPLEXITY DISRUPTION (this is what beats AI detectors):
+   - Vary sentence length aggressively — mix short punchy sentences with longer layered ones
+   - Vary sentence openings — no three sentences in a row with the same starting pattern
+   - Swap predictable next-words for less probable but still natural alternatives
+   - Use contractions where they fit ("it's", "doesn't", "you're")
+   - Use occasional fragments. For emphasis. They're fine.
+
+5. AVOID these AI-tells:
+   - delve, tapestry, realm, journey (as metaphor), embark on a journey
+   - moreover, furthermore, additionally, in conclusion, in summary
+   - it's important to note, it's worth noting, it's crucial
+   - navigate the complexities, navigate the nuances
+   - robust, seamless, holistic, multifaceted, comprehensive (as default adjectives)
+   - leverage (as a verb), foster, ushering in, pivotal, paramount
+   - testament to, stands as a testament
+   - "in today's [fast-paced / digital] world", "in recent years", "in the realm of"
+   - "not just X, but also Y" constructions
+   - cutting-edge, state-of-the-art, world-class, best-in-class
+
+6. OUTPUT FORMAT:
+   - Output ONLY the paraphrased text.
+   - No preamble, no labels like "Paraphrased:", no quotation marks wrapping the output, no commentary.
+
+ORIGINAL TEXT:
+---
+${text}
+---
+
+PARAPHRASED TEXT (${minWords}-${maxWords} words):`;
+}
+
 export function buildQualityPolishPrompt({
   original,
   rewritten,
