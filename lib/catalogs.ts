@@ -183,9 +183,9 @@ export const TOOLS: Tool[] = [
     id: "humanizer",
     href: "/humanizer",
     name: "Text Humanizer",
-    tagline: "AI text in. Human-readable out.",
+    tagline: "Draft in. Voice-matched rewrite out.",
     description:
-      "Rewrites AI-generated text to read naturally — varied sentence rhythm, contractions, AI-tell removal. Pick a tone: casual, professional, academic, or storytelling.",
+      "Rewrites rough text around your purpose and voice. Add a writing sample, pick a content mode, and get internal scores for readability, repetition, generic phrasing, variety, and meaning.",
     status: "live",
     icon: "Sparkles",
   },

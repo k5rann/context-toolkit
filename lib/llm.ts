@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateOpenRouter, isOpenRouterModel } from "./openrouter";
 
-// Free-tier model fallback chain. Order = preference.
+// Free-tier Gemini fallback chain. Order = preference.
 // Each model has its own daily/per-minute quota bucket.
 const GEMINI_FALLBACK_CHAIN = [
   "gemini-2.5-flash-lite",
@@ -44,6 +45,24 @@ export async function generate({
   prompt,
   preferredModel,
 }: GenerateOptions): Promise<string> {
+  // Route OpenRouter models (vendor/model format) to the OpenRouter client
+  // using the server-side OPENROUTER_API_KEY. The user's BYO Gemini key
+  // doesn't apply here — OpenRouter is a separate vendor.
+  if (preferredModel && isOpenRouterModel(preferredModel)) {
+    const orKey = process.env.OPENROUTER_API_KEY;
+    if (!orKey) {
+      throw new Error(
+        "OPENROUTER_API_KEY is missing on the server. Experimental models require it. Add it in Vercel env vars."
+      );
+    }
+    return generateOpenRouter({
+      apiKey: orKey,
+      prompt,
+      model: preferredModel,
+    });
+  }
+
+  // Default: Gemini path with the BYO/env key + fallback chain.
   if (!apiKey) {
     throw new Error(
       "No Gemini API key provided. Get one free at https://aistudio.google.com/app/apikey"

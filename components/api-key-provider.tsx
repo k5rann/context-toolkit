@@ -23,11 +23,14 @@ export function ApiKeyProvider({
   const [hydrated, setHydrated] = React.useState(false);
 
   React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setUserKeyState(saved);
-    } catch {}
-    setHydrated(true);
+    const id = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) setUserKeyState(saved);
+      } catch {}
+      setHydrated(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   const setUserKey = React.useCallback((key: string) => {

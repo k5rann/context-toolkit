@@ -77,7 +77,6 @@ export function ConferencePage() {
       userStoppedRef.current = true;
       cleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function cleanup() {

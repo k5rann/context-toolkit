@@ -40,10 +40,13 @@ export function VoicePage() {
 
   // Browser-support detection runs client-side after hydration.
   React.useEffect(() => {
-    setSupported(isSpeechRecognitionSupported());
-    // Brave exposes navigator.brave with an async isBrave() method.
-    const nav = navigator as Navigator & { brave?: { isBrave: () => Promise<boolean> } };
-    nav.brave?.isBrave().then((result) => setIsBrave(result)).catch(() => {});
+    const id = window.setTimeout(() => {
+      setSupported(isSpeechRecognitionSupported());
+      // Brave exposes navigator.brave with an async isBrave() method.
+      const nav = navigator as Navigator & { brave?: { isBrave: () => Promise<boolean> } };
+      nav.brave?.isBrave().then((result) => setIsBrave(result)).catch(() => {});
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   // Cleanup on unmount.
@@ -203,11 +206,11 @@ export function VoicePage() {
             <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="space-y-2 text-sm">
               <div className="font-semibold text-foreground">
-                Your browser doesn't support voice recognition
+                Your browser doesn&apos;t support voice recognition
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 The Web Speech API is supported in Chrome, Safari, Edge, and
-                Brave. Firefox doesn't support it. Open this page in one of
+                Brave. Firefox doesn&apos;t support it. Open this page in one of
                 those browsers and try again.
               </p>
             </div>
@@ -404,7 +407,7 @@ export function VoicePage() {
           <li>• Web Speech adds basic punctuation; expect to clean it up.</li>
           <li>
             • For long sessions, the recording auto-restarts after silent
-            gaps — keep talking, it'll keep transcribing.
+            gaps — keep talking, it&apos;ll keep transcribing.
           </li>
           <li>
             • The transcript is editable. Fix mistakes inline before copying.
