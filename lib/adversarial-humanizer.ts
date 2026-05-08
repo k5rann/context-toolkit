@@ -88,13 +88,24 @@ export async function humanizeAdversarial(
   opts: AdversarialOptions
 ): Promise<AdversarialResult> {
   const startedAt = Date.now();
-  const prompt = buildVoiceRewritePrompt({
-    text: opts.text,
-    contentMode: opts.contentMode,
-    referenceStyle: opts.referenceStyle,
-    writingSample: opts.writingSample,
-    sourceNotes: opts.sourceNotes,
-  });
+
+  // Length guard. The base voice-rewrite prompt biases toward compression
+  // for "business"/"phrase" content modes, which kills our adversarial test
+  // (Copyleaks requires 350+ chars to score). Append an explicit floor so
+  // candidates preserve length close to the input.
+  const originalWordCount = opts.text.trim().split(/\s+/).filter(Boolean).length;
+  const minWords = Math.max(50, Math.floor(originalWordCount * 0.9));
+  const maxWords = Math.ceil(originalWordCount * 1.2);
+  const lengthConstraint = `\n\nMANDATORY LENGTH RULE (overrides any compression bias from the content mode):\n- Output must be between ${minWords} and ${maxWords} words. Target: ${originalWordCount} words.\n- Do NOT shorten the input. Preserve every distinct point. Replace generic phrases with grounded specifics rather than cutting them.\n- If the original has 5 ideas, the rewrite must have 5 ideas, not 2 or 3.`;
+
+  const prompt =
+    buildVoiceRewritePrompt({
+      text: opts.text,
+      contentMode: opts.contentMode,
+      referenceStyle: opts.referenceStyle,
+      writingSample: opts.writingSample,
+      sourceNotes: opts.sourceNotes,
+    }) + lengthConstraint;
 
   // Generate all candidates in parallel. If any one fails we still
   // proceed with the rest — better to score 4 than fail the whole run.
