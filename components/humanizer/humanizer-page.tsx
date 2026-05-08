@@ -84,6 +84,12 @@ const PRESET_CHIPS: PresetChip[] = [
     experimental: true,
     experimentalNeedsServerKey: true,
   },
+  {
+    id: "adversarial",
+    label: "Adversarial",
+    hint: "5 Gemini candidates · scored vs detector · lowest wins · ~25s",
+    experimental: true,
+  },
 ];
 
 function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
@@ -104,6 +110,8 @@ export function HumanizerPage() {
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   const overLimit = text.length > MAX_CHARS;
   const usingExperimental = isExperimentalPreset(preset);
+  const activeChip = PRESET_CHIPS.find((c) => c.id === preset);
+  const showExperimentalBadge = !!activeChip?.experimental;
 
   function validateInputs() {
     if (!text.trim()) {
@@ -242,7 +250,7 @@ export function HumanizerPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Model</label>
-              {usingExperimental && (
+              {showExperimentalBadge && (
                 <span className="text-[10px] font-mono text-amber-500 uppercase tracking-wider">
                   experimental
                 </span>

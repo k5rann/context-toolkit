@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { humanize, humanizeBakeoff } from "@/lib/humanizer";
+import { humanizeAdversarial } from "@/lib/adversarial-humanizer";
 import type {
   HumanizerContentMode,
   HumanizerModelPreset,
@@ -28,6 +29,7 @@ const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
   "experimental-llama",
   "experimental-qwen",
   "experimental-minimax",
+  "adversarial",
 ];
 
 const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
@@ -38,6 +40,10 @@ const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
 
 function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
   return EXPERIMENTAL_PRESETS.includes(preset);
+}
+
+function isAdversarialPreset(preset: HumanizerModelPreset): boolean {
+  return preset === "adversarial";
 }
 const VALID_REFERENCE_STYLES = REFERENCE_STYLES.map((style) => style.id);
 
@@ -137,6 +143,7 @@ export async function POST(req: NextRequest) {
 
     const resolvedPreset = resolveModelPreset(modelPreset, legacyIntensity);
     const usingExperimental = !bakeoff && isExperimentalPreset(resolvedPreset);
+    const usingAdversarial = !bakeoff && isAdversarialPreset(resolvedPreset);
 
     // Experimental presets route through OpenRouter using the server-side
     // OPENROUTER_API_KEY (set in Vercel env). They don't need the user's
@@ -155,6 +162,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (usingAdversarial && !process.env.HUGGINGFACE_API_KEY) {
+      return NextResponse.json(
+        {
+          error:
+            "Adversarial mode requires HUGGINGFACE_API_KEY on the server. Add it in Vercel env vars (or .env.local for dev).",
+        },
+        { status: 500 }
+      );
+    }
+
     if (!usingExperimental && !apiKey) {
       return NextResponse.json(
         {
@@ -166,11 +183,61 @@ export async function POST(req: NextRequest) {
     }
 
     const resolvedContentMode = resolveContentMode(contentMode, tone);
+    const resolvedReferenceStyle = resolveReferenceStyle(
+      referenceStyle,
+      resolvedContentMode
+    );
+
+    if (usingAdversarial) {
+      // Adversarial path: 5 candidates × Gemini at varied temps, scored by
+      // HuggingFace surrogate detector, lowest-AI-score wins. Wrap into the
+      // same response shape the UI expects, plus an `adversarial` block.
+      const adv = await humanizeAdversarial({
+        text,
+        contentMode: resolvedContentMode,
+        referenceStyle: resolvedReferenceStyle,
+        writingSample: sample,
+        sourceNotes: notes,
+        geminiApiKey: apiKey,
+        hfApiKey: process.env.HUGGINGFACE_API_KEY!,
+      });
+      const wordCount = adv.output.split(/\s+/).filter(Boolean).length;
+      const originalWordCount = text.split(/\s+/).filter(Boolean).length;
+      return NextResponse.json({
+        output: adv.output,
+        pass1Output: adv.output,
+        contentMode: resolvedContentMode,
+        referenceStyle: resolvedReferenceStyle,
+        modelPreset: "adversarial",
+        originalWordCount,
+        outputWordCount: wordCount,
+        passes: 1,
+        // Synthetic quality block so the existing UI doesn't break — real
+        // signal here is the adversarial.bestScore.aiProbability.
+        quality: {
+          readability: 0,
+          repetition: 0,
+          genericPhrasing: 0,
+          sentenceVariety: 0,
+          specificity: 0,
+          meaningRetention: 0,
+          overall: Math.round(
+            (1 - adv.candidates[adv.bestIdx].detectorScore.aiProbability) * 100
+          ),
+          notes: [
+            `Surrogate detector: ${adv.detectorModel}`,
+            `Best candidate AI-probability: ${(adv.candidates[adv.bestIdx].detectorScore.aiProbability * 100).toFixed(1)}%`,
+            `Generated ${adv.meta.candidatesGenerated}/5, scored ${adv.meta.candidatesScored}/5 in ${(adv.meta.elapsedMs / 1000).toFixed(1)}s`,
+          ],
+        },
+        adversarial: adv,
+      });
+    }
 
     const options = {
       text,
       contentMode: resolvedContentMode,
-      referenceStyle: resolveReferenceStyle(referenceStyle, resolvedContentMode),
+      referenceStyle: resolvedReferenceStyle,
       writingSample: sample,
       sourceNotes: notes,
       apiKey,

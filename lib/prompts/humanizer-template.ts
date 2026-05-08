@@ -17,7 +17,8 @@ export type HumanizerModelPreset =
   | "quality"
   | "experimental-llama"
   | "experimental-qwen"
-  | "experimental-minimax";
+  | "experimental-minimax"
+  | "adversarial";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -116,6 +117,13 @@ export const MODEL_PRESETS: Array<{
     short: "Experimental — different fingerprint",
     description:
       "Routes through OpenRouter to MiniMax m2.5 (free). Chinese model with a distinct distribution — strongest non-Western alternative for detector evasion.",
+  },
+  {
+    id: "adversarial",
+    label: "Adversarial",
+    short: "5 candidates, scored, lowest wins",
+    description:
+      "NeurIPS-2025-style detector-guided paraphrasing. Generates 5 Gemini candidates at varied temperatures, scores each against a HuggingFace AI-detector model, returns the lowest-AI-score winner. Highest detector-evasion mode but slower (~25s). Surrogate detector ≠ Copyleaks, results may not transfer perfectly.",
   },
 ];
 
