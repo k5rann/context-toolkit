@@ -28,14 +28,17 @@ const PRESET_MODELS: Record<
   // wall against Copyleaks-class detectors).
   // Single-pass: OpenRouter free tier rate-limits are tight, polish pass
   // adds latency we don't need for the fingerprint test.
-  "experimental-deepseek": {
-    rewriteModel: "deepseek/deepseek-chat-v3.1:free",
-  },
+  // Verified working model IDs as of 2026-05-08; OpenRouter retires free
+  // models often — re-check `curl https://openrouter.ai/api/v1/models` if
+  // any of these 404 in the future.
   "experimental-llama": {
     rewriteModel: "meta-llama/llama-3.3-70b-instruct:free",
   },
   "experimental-qwen": {
-    rewriteModel: "qwen/qwen-2.5-72b-instruct:free",
+    rewriteModel: "qwen/qwen3-next-80b-a3b-instruct:free",
+  },
+  "experimental-minimax": {
+    rewriteModel: "minimax/minimax-m2.5:free",
   },
 };
 

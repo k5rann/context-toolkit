@@ -25,15 +25,15 @@ const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
   "fast",
   "balanced",
   "quality",
-  "experimental-deepseek",
   "experimental-llama",
   "experimental-qwen",
+  "experimental-minimax",
 ];
 
 const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
-  "experimental-deepseek",
   "experimental-llama",
   "experimental-qwen",
+  "experimental-minimax",
 ];
 
 function isExperimentalPreset(preset: HumanizerModelPreset): boolean {

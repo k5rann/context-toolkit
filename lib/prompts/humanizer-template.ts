@@ -15,9 +15,9 @@ export type HumanizerModelPreset =
   | "fast"
   | "balanced"
   | "quality"
-  | "experimental-deepseek"
   | "experimental-llama"
-  | "experimental-qwen";
+  | "experimental-qwen"
+  | "experimental-minimax";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -97,13 +97,6 @@ export const MODEL_PRESETS: Array<{
       "Prefers Gemini Pro for harder rewrites and gives the polish pass more room.",
   },
   {
-    id: "experimental-deepseek",
-    label: "DeepSeek-V3",
-    short: "Experimental — different fingerprint",
-    description:
-      "Routes through OpenRouter to DeepSeek-V3 (free). Different model fingerprint from Gemini — real shot at evading detectors that pattern-match Gemini specifically.",
-  },
-  {
     id: "experimental-llama",
     label: "Llama-3.3-70B",
     short: "Experimental — different fingerprint",
@@ -112,10 +105,17 @@ export const MODEL_PRESETS: Array<{
   },
   {
     id: "experimental-qwen",
-    label: "Qwen-2.5-72B",
+    label: "Qwen3-next-80B",
     short: "Experimental — different fingerprint",
     description:
-      "Routes through OpenRouter to Qwen 2.5 72B (free). Different model fingerprint than Gemini.",
+      "Routes through OpenRouter to Alibaba Qwen3-next 80B (free). Chinese model, completely different fingerprint than Gemini.",
+  },
+  {
+    id: "experimental-minimax",
+    label: "MiniMax-m2.5",
+    short: "Experimental — different fingerprint",
+    description:
+      "Routes through OpenRouter to MiniMax m2.5 (free). Chinese model with a distinct distribution — strongest non-Western alternative for detector evasion.",
   },
 ];
 
