@@ -26,6 +26,7 @@ const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
   "minimax",
   "minimax-deep",
   "chain",
+  "chain-strict",
 ];
 const VALID_REFERENCE_STYLES = REFERENCE_STYLES.map((style) => style.id);
 
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
 
     let timeoutMs: number;
     let timeoutMessage: string;
-    if (resolvedPreset === "chain") {
+    if (resolvedPreset === "chain" || resolvedPreset === "chain-strict") {
       timeoutMs = 55000;
       timeoutMessage =
         "Chain rewrite timed out. One or both models may be slow; try Standard mode or retry in a moment.";

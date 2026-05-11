@@ -189,11 +189,12 @@ export function HumanizerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 rounded-lg border border-border/60 bg-muted/10 p-1">
+          <div className="grid grid-cols-4 rounded-lg border border-border/60 bg-muted/10 p-1">
             {[
               { id: "minimax" as const, label: "Standard" },
               { id: "minimax-deep" as const, label: "Deep" },
               { id: "chain" as const, label: "Stealth" },
+              { id: "chain-strict" as const, label: "Strict" },
             ].map((option) => (
               <button
                 key={option.id}
@@ -223,7 +224,9 @@ export function HumanizerPage() {
                   ? "Testing options..."
                   : preset === "chain"
                     ? "Chain rewriting..."
-                    : "Rewriting..."}
+                    : preset === "chain-strict"
+                      ? "Strict chain rewriting..."
+                      : "Rewriting..."}
               </>
             ) : (
               <>
@@ -232,7 +235,9 @@ export function HumanizerPage() {
                   ? "Deep rewrite text"
                   : preset === "chain"
                     ? "Stealth rewrite"
-                    : "Rewrite text"}
+                    : preset === "chain-strict"
+                      ? "Strict rewrite (keep all facts)"
+                      : "Rewrite text"}
               </>
             )}
           </Button>
@@ -261,7 +266,9 @@ export function HumanizerPage() {
                     ? "Testing MiniMax draft options..."
                     : preset === "chain"
                       ? "Running 2-model chain rewrite..."
-                      : "Drafting a quick grounded rewrite..."}
+                      : preset === "chain-strict"
+                        ? "Running strict chain — preserving all facts..."
+                        : "Drafting a quick grounded rewrite..."}
                 </div>
               </CardContent>
             </Card>

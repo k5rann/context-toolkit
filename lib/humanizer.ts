@@ -37,12 +37,34 @@ const PRESET_MODELS: Record<
   chain: {
     // Llama first: fast (no reasoning step), good structural rewriter.
     // DeepSeek second: different fingerprint family, handles hop 2 refine well.
+    // Fallbacks for hop 2: when DeepSeek times out, we MUST still get a
+    // second hop from a different-fingerprint model — single-hop output
+    // gets flagged 100% AI by Copyleaks. Qwen and Mistral are different
+    // families from Llama. Order matters: paid + fast first.
     rewriteModel: "meta-llama/llama-3.3-70b-instruct",
     refineModel: "deepseek/deepseek-v4-flash",
-    fallbackModels: [],
+    fallbackModels: [
+      "qwen/qwen-2.5-72b-instruct",
+      "google/gemini-2.5-flash",
+      "mistralai/mistral-large-2411",
+    ],
     // Higher temperature = higher perplexity = harder for detectors.
     temperatures: [1.05],
     label: "Chain (Llama→DeepSeek)",
+    hopTimeoutMs: 30000,
+  },
+  // Strict variant: same models, same chain, but hop 2 uses strictFacts=true
+  // (no aggressive cutting, no dropped facts, no tangential aside).
+  "chain-strict": {
+    rewriteModel: "meta-llama/llama-3.3-70b-instruct",
+    refineModel: "deepseek/deepseek-v4-flash",
+    fallbackModels: [
+      "qwen/qwen-2.5-72b-instruct",
+      "google/gemini-2.5-flash",
+      "mistralai/mistral-large-2411",
+    ],
+    temperatures: [1.05],
+    label: "Chain Strict (no fact loss)",
     hopTimeoutMs: 30000,
   },
 };
@@ -166,6 +188,26 @@ const GENERIC_PATTERNS: RegExp[] = [
   /\bdespite these challenges\b/i,
   /\bsignificant concern\b/i,
   /\bhas become increasingly\b/i,
+  // Copyleaks AI Phrase triggers (caught in tests 2026-05-11)
+  /\bthat's not opinion\b/i,
+  /\bhaven't sat idle\b/i,
+  /\bthe stakes are high\b/i,
+  /\bthat said\b/i,
+  /\bmeanwhile\b/i,
+  /\bhowever\b/i,
+  /\bin other words\b/i,
+  /\bto put it simply\b/i,
+  /\bto be fair\b/i,
+  /\blet's be (?:clear|honest|real)\b/i,
+  /\bhere's the (?:thing|reality|truth|catch|kicker)\b/i,
+  /\bthe bottom line\b/i,
+  /\bthe reality is\b/i,
+  /\bthe truth is\b/i,
+  /\bdriven by a hard truth\b/i,
+  /\bit's a massive shift\b/i,
+  /\bit's a (?:huge|big|major|significant) shift\b/i,
+  /\band the stakes are\b/i,
+  /\bpush(?:ing)? back\b/i,
   /\bin conclusion\b/i,
   /\bin summary\b/i,
   /\bit'?s important to note\b/i,
@@ -540,6 +582,71 @@ function paragraphCount(s: string): number {
 function uniqueRatio(items: string[]): number {
   if (items.length === 0) return 1;
   return new Set(items).size / items.length;
+}
+
+/**
+ * Post-generation cleanup: strip AI transition phrases and sentence openers
+ * that Copyleaks flags as "AI Phrases." Works at the sentence level.
+ */
+function stripAITransitions(text: string): string {
+  // Sentence-opening transitions to remove (strip the phrase, keep the rest)
+  const SENTENCE_OPENER_STRIPS: RegExp[] = [
+    /^That said,?\s*/i,
+    /^Meanwhile,?\s*/i,
+    /^However,?\s*/i,
+    /^In other words,?\s*/i,
+    /^To put it simply,?\s*/i,
+    /^To be fair,?\s*/i,
+    /^To be clear,?\s*/i,
+    /^Let's be (?:clear|honest|real)[,:]\s*/i,
+    /^Here's the (?:thing|reality|truth|catch|kicker)[,:]\s*/i,
+    /^The bottom line (?:is|here)[,:]\s*/i,
+    /^The reality is[,:]\s*/i,
+    /^The truth is[,:]\s*/i,
+    /^At the same time,?\s*/i,
+    /^On the other hand,?\s*/i,
+    /^On the flip side,?\s*/i,
+    /^That being said,?\s*/i,
+    /^With that in mind,?\s*/i,
+    /^It's worth noting (?:that\s)?/i,
+    /^It's important to note (?:that\s)?/i,
+    /^And yet,?\s*/i,
+    /^Still,?\s*/i,
+    /^Even so,?\s*/i,
+    /^In fact,?\s*/i,
+    /^Of course,?\s*/i,
+    /^Needless to say,?\s*/i,
+  ];
+
+  // Full sentence patterns to remove entirely
+  const FULL_SENTENCE_KILLS: RegExp[] = [
+    /^The stakes are high\.?\s*$/i,
+    /^And the stakes are high\.?\s*$/i,
+    /^It's a (?:huge|big|major|massive|significant) shift\.?\s*$/i,
+  ];
+
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const cleaned = sentences
+    .map((s) => {
+      // Kill entire sentence if it matches a throwaway pattern
+      for (const kill of FULL_SENTENCE_KILLS) {
+        if (kill.test(s.trim())) return null;
+      }
+      // Strip transition openers
+      let result = s;
+      for (const opener of SENTENCE_OPENER_STRIPS) {
+        result = result.replace(opener, "");
+      }
+      // Capitalize first letter after stripping
+      if (result.length > 0 && result[0] !== result[0].toUpperCase()) {
+        result = result[0].toUpperCase() + result.slice(1);
+      }
+      return result;
+    })
+    .filter(Boolean)
+    .join(" ");
+
+  return cleaned;
 }
 
 function findGenericPhrases(s: string): string[] {
@@ -1176,27 +1283,44 @@ async function humanizeChain(
 
   if (preset.refineModel && chainDeadline - Date.now() > 8000) {
     try {
+      // Hop 2 uses a higher temperature than hop 1. The point of hop 2 is
+      // to disrupt the polished marketing prose that hop 1 sometimes leaves
+      // intact. At equal temp, DeepSeek tends to "polish" Llama's output
+      // back toward AI-sounding marketing copy. +0.10 fights that.
+      const hop2Temp = Math.min(preset.temperatures[0] + 0.1, 1.3);
+      // Use shorter per-model timeout for hop 2 so we can cycle through
+      // ALL fallback models within the chain deadline. Without this, one
+      // slow model exhausts the budget and we fall back to 1-hop output
+      // (which gets flagged 100% AI). No maxAttempts cap — let the
+      // deadline-budget logic decide when to stop.
+      const hop2PerModelTimeout = 15000;
       const hop2 = await generateWithFallback({
         apiKey,
-        prompt: buildChainHop2Prompt({ text: hop1Output, contentMode }),
+        prompt: buildChainHop2Prompt({
+          text: hop1Output,
+          contentMode,
+          strictFacts: modelPreset === "chain-strict",
+        }),
         primaryModel: preset.refineModel,
         fallbackModels: preset.fallbackModels,
         excludeModels: [hop1Model],
-        temperature: preset.temperatures[0],
-        timeoutMs: hopTimeout,
-        maxAttempts: 2,
+        temperature: hop2Temp,
+        timeoutMs: hop2PerModelTimeout,
         deadlineMs: chainDeadline,
       });
       const hop2Output = clean(hop2.text);
       const hop2Quality = scoreQuality(trimmed, hop2Output);
 
       // For chain/stealth mode, ALWAYS prefer the 2-hop output for
-      // fingerprint mixing. The quality scorer penalizes structural disruption
-      // (which is exactly what we need to beat detectors), so regression
-      // checks would reject the better-for-detection output. Only reject
-      // if hop 2 produced something catastrophically bad (readability < 60
-      // or genericPhrasing < 50).
-      if (hop2Quality.readability >= 60 && hop2Quality.genericPhrasing >= 50) {
+      // fingerprint mixing — that's the whole point of chaining through
+      // different model families. Only reject if hop 2 is catastrophically
+      // short or completely incoherent. The quality scorer penalizes the
+      // structural disruption we WANT, so quality-based rejection defeats
+      // the purpose.
+      const hop2WordCount = hop2Output.split(/\s+/).filter(Boolean).length;
+      const hop1WordCount = hop1Output.split(/\s+/).filter(Boolean).length;
+      const notTruncated = hop2WordCount >= hop1WordCount * 0.5;
+      if (hop2Output.length > 50 && notTruncated) {
         finalOutput = hop2Output;
         finalQuality = hop2Quality;
         usedModels = `${hop1Model} → ${hop2.usedModel}`;
@@ -1211,14 +1335,11 @@ async function humanizeChain(
     }
   }
 
-  // ── Repair pass (skip for chain mode) ──────────────────────────────
-  // The repair pass uses the quality scorer which penalizes structural
-  // disruption — exactly what chain mode needs to beat detectors.
-  // Repair actively undoes our work by reverting toward the original text.
-  // Only run repair for non-chain presets or if genericPhrasing is truly bad.
-  const shouldRepair =
-    finalQuality.genericPhrasing < 60 &&
-    chainDeadline - Date.now() > 6000;
+  // ── Repair pass — DISABLED for chain mode ───────────────────────────
+  // The repair pass references the original text and pulls output back
+  // toward it, undoing the fingerprint mixing that makes chain mode work.
+  // Never repair chain output.
+  const shouldRepair = false;
   if (shouldRepair) {
     try {
       const { text: raw } = await generateWithFallback({
@@ -1260,6 +1381,13 @@ async function humanizeChain(
       // Repair failure is non-critical — keep chain output as-is
     }
   }
+
+  // ── Post-chain phrase cleanup DISABLED ────────────────────────────
+  // Aggressive transition-stripping removed natural concession phrases
+  // ("Sure,", "But there's...", "Of course,") that test as 0% AI on
+  // Copyleaks IN CONTEXT. Voice + concrete nouns matter more than
+  // phrase-level bans. Re-enable only if a pattern proves consistently
+  // detectable across multiple tests.
 
   // ── Assemble result ────────────────────────────────────────────────
   finalQuality.notes = [

@@ -12,7 +12,11 @@ export type HumanizerContentMode =
   | "casual"
   | "business";
 
-export type HumanizerModelPreset = "minimax" | "minimax-deep" | "chain";
+export type HumanizerModelPreset =
+  | "minimax"
+  | "minimax-deep"
+  | "chain"
+  | "chain-strict";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -97,6 +101,13 @@ export const MODEL_PRESETS: Array<{
     short: "2-model fingerprint mix",
     description:
       "Rewrites through two different models in sequence to mix AI fingerprints and reduce detection scores.",
+  },
+  {
+    id: "chain-strict",
+    label: "Stealth Strict",
+    short: "Chain, all facts preserved",
+    description:
+      "Same 2-model chain but preserves every fact and avoids the tangential aside. Slightly higher detection score, zero information loss.",
   },
 ];
 
@@ -477,6 +488,8 @@ export function buildChainHop1Prompt({
   // Keep the generative prompt SHORT and natural. Over-instructing produces
   // mechanical output (the framework's own Level 10 over-correction warning).
   // The banned phrase list is enforced in post-processing, not here.
+  // VALIDATED: this prompt produces 0% AI on Copyleaks when paired with
+  // a 2-hop chain (Llama -> DeepSeek). Don't add directives without retest.
   return `Rewrite this ${wc}-word text as a fresh draft. Not a paraphrase. ${minWords}-${maxWords} words. Keep every fact and name.
 
 Lead with the most interesting point, not the original's opening. Use contractions. Mix long sentences with short ones. Don't open with "X has transformed..." — start in the middle. End when the point lands, no wrap-up.
@@ -497,22 +510,90 @@ REWRITTEN:`;
 export function buildChainHop2Prompt({
   text,
   contentMode,
+  strictFacts = false,
 }: {
   text: string;
   contentMode: HumanizerContentMode;
+  /** When true: keep every fact, no tangential aside, smaller cuts. */
+  strictFacts?: boolean;
 }): string {
   const wc = countWords(text);
   const minWords = Math.max(1, Math.floor(wc * 0.90));
   const maxWords = Math.max(minWords, Math.ceil(wc * 1.10));
 
-  return `Rephrase this in your own voice. ${minWords}-${maxWords} words. Keep every fact. Keep the argument order.
+  // Hop 2 is a DEGRADATION script, not a polish pass. Validated against
+  // humanizeai.pro 2026-05-11 — their output passes Copyleaks 0% AI on
+  // content where ours still fails. Their trick: simulate a non-native
+  // English copywriter at a small tour agency. The text gets WORSE
+  // (clunkier, less fluent, lossy) but reads as human because real human
+  // marketing copy is rarely polished.
+  //
+  // KEY MOVES from the commercial humanizer:
+  //   - cut 30-45% of content
+  //   - "namely", "etc.", "i.e." used in prose
+  //   - clunky passives kept ("drinks served to them")
+  //   - tense/POV slips between paragraphs (you → travelers → guests)
+  //   - tangential add-on sentence ("It must be noted...")
+  //   - 1 fact dropped intentionally
+  //
+  // BUT: Copyleaks requires 350+ characters (~70+ words) to even score.
+  // So for shorter inputs we cut less. The floor is 80 words minimum.
+  const COPYLEAKS_MIN_WORDS = 80;
 
-Use contractions. Vary sentence length — some long, some short. End when the point lands. No wrap-up, no "in conclusion."
+  // Strict facts mode preserves more content (no aggressive cutting, no
+  // dropped facts, no tangential aside). Trade-off: slightly higher chance
+  // of failing detection, zero information loss.
+  const naturalMin = strictFacts
+    ? Math.floor(wc * 0.85)
+    : Math.floor(wc * 0.6);
+  const naturalMax = strictFacts
+    ? Math.ceil(wc * 1.05)
+    : Math.ceil(wc * 0.85);
+  const targetMin = Math.max(naturalMin, COPYLEAKS_MIN_WORDS);
+  const targetMax = Math.max(naturalMax, COPYLEAKS_MIN_WORDS + 20);
+
+  const move1 = strictFacts
+    ? `MOVE 1 — Keep EVERY fact, name, number, price, duration, and named attraction. Light trimming of pure decoration only. Output should be 85-105% of the source length.`
+    : `MOVE 1 — CUT AGGRESSIVELY. Drop entire sentences if they're decorative. Drop adjective chains. Drop 1 minor fact entirely. Output should be 60-85% of the source length.`;
+
+  const move4 = strictFacts
+    ? `MOVE 4 — Do NOT add a tangential aside or "It must be noted" sentence. Strict facts mode means we don't introduce content that wasn't in the source.`
+    : `MOVE 4 — Add 1 tangential sentence near the end as an aside. Something a writer would tack on as an afterthought, drawn from a real detail in the source text — NOT a generic logistics note. Pick a specific minor detail from the source and make it the aside.
+  Style examples (DON'T copy these verbatim — make up your own from the actual source):
+  - "It must be noted that X is also included."
+  - "Note: Y is optional but recommended."
+  - "Worth mentioning — Z is available on request."`;
+
+  return `Rewrite the TEXT below as if YOU are a non-native English copywriter at a small Dubai tour agency. NOT polished marketing prose. Real, slightly clunky, lossy human writing. ${targetMin}-${targetMax} words. Keep proper nouns, prices, durations, and place names.${strictFacts ? "\n\n>> STRICT FACTS MODE: do not drop or alter any factual content. Reshape the prose only." : ""}
+
+Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
+
+${move1}
+
+MOVE 2 — Use these connectors that AI never uses in prose: "namely", "etc.", "i.e.", "for example,", "in addition,". Sprinkle 1-2 of them naturally.
+  Example: "various cultural activities that include photography from the dune, a camel ride, application of traditional henna, etc."
+
+MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive voice is fine. ESL-sounding constructions are fine.
+  Example: "rest and refresh their bodies with drinks served to them" (not "enjoy a welcome drink")
+
+${move4}
+
+MOVE 5 — Tense/POV slip is FINE. Mix "you", "travelers", "guests", "our visitors" across paragraphs. Don't unify them.
+
+MOVE 6 — Pick simpler/weaker verb where you can. "commences" → "starts off". "navigate" → "drive across". "engage in" → "do" / "take part in". But don't go full Latinate-purge — leave some intact.
+
+MOVE 7 — Don't end with marketing wrap-up. Stop on a small detail or an aside, not a summary or CTA.
+
+DO NOT:
+- Use em-dashes for stylistic effect (commercial humanizers don't)
+- Use contractions everywhere (some yes, some no — humans aren't consistent)
+- Write punchy single-word sentences (that's a copywriting move, not a human-writing move)
+- Improve clarity or flow — we WANT it slightly clunky
 
 ${MODE_GUIDANCE[contentMode]}
 
 TEXT:
 ${text}
 
-REWRITTEN:`;
+REWRITTEN (apply all moves; output ${targetMin}-${targetMax} words):`;
 }
