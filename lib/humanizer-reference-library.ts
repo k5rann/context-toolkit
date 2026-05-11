@@ -22,14 +22,14 @@ export const REFERENCE_STYLES: ReferenceStyleProfile[] = [
     description:
       "For reflections, class paragraphs, and personal explanations that need to sound lived-in.",
     rhythm: [
-      "mostly first-person when notes are first-person",
+      "mostly first-person when the draft is first-person",
       "short to medium paragraphs, often starting with the actual friction instead of the topic",
       "plain transitions like so, but, then, because, and sometimes no transition at all",
     ],
     use: [
-      "lead with a real moment from the notes rather than a role label or topic sentence",
-      "keep ordinary details from the source notes",
-      "admit friction or uncertainty when the notes imply it",
+      "lead with a real moment from the draft rather than a role label or topic sentence",
+      "keep ordinary details from the draft",
+      "admit friction or uncertainty when the draft implies it",
       "prefer specific tools, classes, tasks, places, or habits over general claims",
       "let one sentence sound slightly blunt or unfinished if that is how a student would say it",
     ],

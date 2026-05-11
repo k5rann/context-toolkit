@@ -38,12 +38,16 @@ export interface GenerateOptions {
   apiKey: string;
   prompt: string;
   preferredModel?: string;
+  temperature?: number;
+  timeoutMs?: number;
 }
 
 export async function generate({
   apiKey,
   prompt,
   preferredModel,
+  temperature,
+  timeoutMs,
 }: GenerateOptions): Promise<string> {
   // Route OpenRouter models (vendor/model format) to the OpenRouter client
   // using the server-side OPENROUTER_API_KEY. The user's BYO Gemini key
@@ -52,13 +56,15 @@ export async function generate({
     const orKey = process.env.OPENROUTER_API_KEY;
     if (!orKey) {
       throw new Error(
-        "OPENROUTER_API_KEY is missing on the server. Experimental models require it. Add it in Vercel env vars."
+        "OPENROUTER_API_KEY is missing on the server. MiniMax rewriting requires it. Add it in Vercel env vars."
       );
     }
     return generateOpenRouter({
       apiKey: orKey,
       prompt,
       model: preferredModel,
+      temperature,
+      timeoutMs,
     });
   }
 

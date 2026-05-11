@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { humanize, humanizeBakeoff } from "@/lib/humanizer";
-import { humanizeAdversarial } from "@/lib/adversarial-humanizer";
+import { humanize, humanizeLocalFallback } from "@/lib/humanizer";
 import type {
   HumanizerContentMode,
   HumanizerModelPreset,
@@ -14,6 +13,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const VALID_CONTENT_MODES: HumanizerContentMode[] = [
+  "auto",
   "email",
   "paragraph",
   "phrase",
@@ -23,39 +23,29 @@ const VALID_CONTENT_MODES: HumanizerContentMode[] = [
 ];
 
 const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
-  "fast",
-  "balanced",
-  "quality",
-  "experimental-llama",
-  "experimental-qwen",
-  "experimental-minimax",
-  "adversarial",
-  "adversarial-minimax",
+  "minimax",
+  "minimax-deep",
+  "chain",
 ];
-
-const EXPERIMENTAL_PRESETS: HumanizerModelPreset[] = [
-  "experimental-llama",
-  "experimental-qwen",
-  "experimental-minimax",
-];
-
-const ADVERSARIAL_PRESETS: HumanizerModelPreset[] = [
-  "adversarial",
-  "adversarial-minimax",
-];
-
-function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
-  return EXPERIMENTAL_PRESETS.includes(preset);
-}
-
-function isAdversarialPreset(preset: HumanizerModelPreset): boolean {
-  return ADVERSARIAL_PRESETS.includes(preset);
-}
 const VALID_REFERENCE_STYLES = REFERENCE_STYLES.map((style) => style.id);
 
 const MAX_INPUT_CHARS = 25000;
-const MAX_SAMPLE_CHARS = 8000;
-const MAX_SOURCE_CHARS = 8000;
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string
+): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([
+    promise.finally(() => clearTimeout(timeout)),
+    timeoutPromise,
+  ]);
+}
 
 function resolveContentMode(value: unknown, legacyTone: unknown): HumanizerContentMode {
   if (VALID_CONTENT_MODES.includes(value as HumanizerContentMode)) {
@@ -66,7 +56,7 @@ function resolveContentMode(value: unknown, legacyTone: unknown): HumanizerConte
   }
   if (legacyTone === "professional") return "business";
   if (legacyTone === "storytelling") return "casual";
-  return "casual";
+  return "auto";
 }
 
 function resolveModelPreset(
@@ -76,9 +66,11 @@ function resolveModelPreset(
   if (VALID_MODEL_PRESETS.includes(value as HumanizerModelPreset)) {
     return value as HumanizerModelPreset;
   }
-  if (legacyIntensity === "light") return "fast";
-  if (legacyIntensity === "heavy") return "quality";
-  return "balanced";
+  if (legacyIntensity === "light") {
+    return "minimax";
+  }
+  if (legacyIntensity === "heavy") return "minimax-deep";
+  return "minimax";
 }
 
 function resolveReferenceStyle(
@@ -91,7 +83,28 @@ function resolveReferenceStyle(
   if (contentMode === "academic") return "academic";
   if (contentMode === "business" || contentMode === "email") return "business";
   if (contentMode === "phrase") return "direct";
+  if (contentMode === "auto") return "direct";
   return "student";
+}
+
+function shouldReturnLocalFallback(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  const lower = message.toLowerCase();
+  return [
+    "timed out",
+    "timeout",
+    "queued",
+    "abort",
+    "fetch failed",
+    "network",
+    "rate limit",
+    "rate-limited",
+    "overloaded",
+    "429",
+    "502",
+    "503",
+    "504",
+  ].some((token) => lower.includes(token));
 }
 
 export async function POST(req: NextRequest) {
@@ -102,11 +115,7 @@ export async function POST(req: NextRequest) {
       contentMode,
       modelPreset,
       referenceStyle,
-      writingSample,
-      sourceNotes,
-      bakeoff,
       tone,
-      apiKey: bodyKey,
     } = body;
     const legacyIntensity = body["agg" + "ression"];
 
@@ -126,78 +135,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sample =
-      typeof writingSample === "string" ? writingSample.trim() : "";
-    if (sample.length > MAX_SAMPLE_CHARS) {
-      return NextResponse.json(
-        {
-          error: `Writing sample is ${sample.length.toLocaleString()} characters; max is ${MAX_SAMPLE_CHARS.toLocaleString()}. Use a shorter sample.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const notes = typeof sourceNotes === "string" ? sourceNotes.trim() : "";
-    if (notes.length > MAX_SOURCE_CHARS) {
-      return NextResponse.json(
-        {
-          error: `Source notes are ${notes.length.toLocaleString()} characters; max is ${MAX_SOURCE_CHARS.toLocaleString()}. Use shorter notes.`,
-        },
-        { status: 400 }
-      );
-    }
-
     const resolvedPreset = resolveModelPreset(modelPreset, legacyIntensity);
-    const usingExperimental = !bakeoff && isExperimentalPreset(resolvedPreset);
-    const usingAdversarial = !bakeoff && isAdversarialPreset(resolvedPreset);
+    const apiKey = process.env.OPENROUTER_API_KEY ?? "";
 
-    // Experimental presets route through OpenRouter using the server-side
-    // OPENROUTER_API_KEY (set in Vercel env). They don't need the user's
-    // Gemini BYO key — pass a placeholder; lib/llm.ts ignores it for those.
-    const apiKey = usingExperimental
-      ? process.env.OPENROUTER_API_KEY ?? "openrouter-server-key"
-      : bodyKey || process.env.GEMINI_API_KEY;
-
-    if (usingExperimental && !process.env.OPENROUTER_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
         {
           error:
-            "Experimental models require OPENROUTER_API_KEY on the server. Add it in Vercel env vars (or .env.local for dev).",
+            "MiniMax rewriting requires OPENROUTER_API_KEY on the server. Add it in Vercel env vars (or .env.local for dev).",
         },
         { status: 500 }
-      );
-    }
-
-    if (usingAdversarial && !process.env.HUGGINGFACE_API_KEY) {
-      return NextResponse.json(
-        {
-          error:
-            "Adversarial mode requires HUGGINGFACE_API_KEY on the server. Add it in Vercel env vars (or .env.local for dev).",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (
-      resolvedPreset === "adversarial-minimax" &&
-      !process.env.OPENROUTER_API_KEY
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Adversarial-MiniMax mode requires OPENROUTER_API_KEY on the server. Add it in Vercel env vars.",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!usingExperimental && !apiKey) {
-      return NextResponse.json(
-        {
-          error:
-            "No Gemini API key. Open the menu (top right) and paste your free key. Get one at https://aistudio.google.com/app/apikey",
-        },
-        { status: 400 }
       );
     }
 
@@ -207,97 +154,61 @@ export async function POST(req: NextRequest) {
       resolvedContentMode
     );
 
-    if (usingAdversarial) {
-      // Adversarial path: 5 candidates at varied temps, scored by HuggingFace
-      // surrogate detector, lowest-AI-score wins. Wrap into the same response
-      // shape the UI expects, plus an `adversarial` block.
-      //
-      // Provider depends on the preset:
-      //   adversarial          → Gemini candidates (uses BYO Gemini key)
-      //   adversarial-minimax  → MiniMax candidates via OpenRouter (server key)
-      const isMinimax = resolvedPreset === "adversarial-minimax";
-
-      // For adversarial-minimax we don't need the user's Gemini key.
-      // The earlier `apiKey` resolution may have set it to a placeholder
-      // (since this preset isn't in EXPERIMENTAL_PRESETS for the OpenRouter
-      // bypass list). Re-validate the user has a Gemini key for plain
-      // `adversarial` mode only.
-      if (!isMinimax && !apiKey) {
-        return NextResponse.json(
-          {
-            error:
-              "Adversarial mode (Gemini) requires your Gemini key. Add it via the menu (top-right) or pick Adversarial-MiniMax which uses the server's OpenRouter key.",
-          },
-          { status: 400 }
-        );
-      }
-
-      const adv = await humanizeAdversarial({
-        text,
-        provider: isMinimax ? "openrouter" : "gemini",
-        hfApiKey: process.env.HUGGINGFACE_API_KEY!,
-        geminiApiKey: isMinimax ? undefined : apiKey,
-        openrouterApiKey: isMinimax ? process.env.OPENROUTER_API_KEY : undefined,
-        openrouterModel: isMinimax ? "minimax/minimax-m2.5:free" : undefined,
-      });
-      const wordCount = adv.output.split(/\s+/).filter(Boolean).length;
-      const originalWordCount = text.split(/\s+/).filter(Boolean).length;
-      return NextResponse.json({
-        output: adv.output,
-        pass1Output: adv.output,
-        contentMode: resolvedContentMode,
-        referenceStyle: resolvedReferenceStyle,
-        modelPreset: resolvedPreset,
-        originalWordCount,
-        outputWordCount: wordCount,
-        passes: 1,
-        // Synthetic quality block so the existing UI doesn't break — real
-        // signal here is the adversarial.bestScore.aiProbability.
-        quality: {
-          readability: 0,
-          repetition: 0,
-          genericPhrasing: 0,
-          sentenceVariety: 0,
-          specificity: 0,
-          meaningRetention: 0,
-          overall: Math.round(
-            (1 - adv.candidates[adv.bestIdx].detectorScore.aiProbability) * 100
-          ),
-          notes: [
-            `Generator: ${adv.generatorModel}`,
-            `Surrogate detector: ${adv.detectorModel}`,
-            `Best candidate AI-probability: ${(adv.candidates[adv.bestIdx].detectorScore.aiProbability * 100).toFixed(1)}%`,
-            `Generated ${adv.meta.candidatesGenerated}/5, scored ${adv.meta.candidatesScored}/5 in ${(adv.meta.elapsedMs / 1000).toFixed(1)}s`,
-          ],
-        },
-        adversarial: adv,
-      });
-    }
-
     const options = {
       text,
       contentMode: resolvedContentMode,
       referenceStyle: resolvedReferenceStyle,
-      writingSample: sample,
-      sourceNotes: notes,
       apiKey,
     };
 
-    const result = bakeoff
-      ? await humanizeBakeoff(options)
-      : await humanize({
+    let timeoutMs: number;
+    let timeoutMessage: string;
+    if (resolvedPreset === "chain") {
+      timeoutMs = 55000;
+      timeoutMessage =
+        "Chain rewrite timed out. One or both models may be slow; try Standard mode or retry in a moment.";
+    } else if (resolvedPreset === "minimax-deep") {
+      timeoutMs = 55000;
+      timeoutMessage =
+        "Deep MiniMax timed out while testing draft options. The MiniMax free tier may be queued; try Standard mode or retry in a moment.";
+    } else {
+      timeoutMs = 50000;
+      timeoutMessage =
+        "MiniMax timed out while rewriting. The MiniMax free tier may be queued; retry in a moment.";
+    }
+
+    let result;
+    try {
+      result = await withTimeout(
+        humanize({
           ...options,
           modelPreset: resolvedPreset,
-        });
+        }),
+        timeoutMs,
+        timeoutMessage
+      );
+    } catch (err) {
+      if (!shouldReturnLocalFallback(err)) {
+        throw err;
+      }
+      result = humanizeLocalFallback({
+        text,
+        contentMode: resolvedContentMode,
+        referenceStyle: resolvedReferenceStyle,
+        modelPreset: resolvedPreset,
+        reason: err,
+      });
+    }
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const isRateLimit = ["rate limit", "quota", "all free-tier"].some((t) =>
       message.toLowerCase().includes(t)
     );
+    const isTimeout = message.toLowerCase().includes("timed out");
     return NextResponse.json(
       { error: message, rateLimit: isRateLimit },
-      { status: isRateLimit ? 429 : 500 }
+      { status: isRateLimit ? 429 : isTimeout ? 504 : 500 }
     );
   }
 }

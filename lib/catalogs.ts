@@ -183,9 +183,9 @@ export const TOOLS: Tool[] = [
     id: "humanizer",
     href: "/humanizer",
     name: "Text Humanizer",
-    tagline: "Draft in. Voice-matched rewrite out.",
+    tagline: "Website copy in. Cleaner rewrite out.",
     description:
-      "Rewrites rough text around your purpose and voice. Add a writing sample, pick a content mode, and get internal scores for readability, repetition, generic phrasing, variety, and meaning.",
+      "Rewrites rough company and website copy through a single MiniMax-powered flow, with internal scores for readability, repetition, generic phrasing, variety, and meaning.",
     status: "live",
     icon: "Sparkles",
   },

@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useApiKey } from "@/components/api-key-provider";
 import type {
   HumanizerContentMode,
   HumanizerModelPreset,
@@ -30,6 +29,8 @@ interface QualityScores {
   sentenceVariety: number;
   specificity: number;
   meaningRetention: number;
+  lengthFit: number;
+  structureFit: number;
   overall: number;
   notes: string[];
 }
@@ -43,68 +44,16 @@ interface HumanizeResult {
   originalWordCount: number;
   outputWordCount: number;
   passes: number;
+  candidateCount?: number;
   quality: QualityScores;
 }
 
 const MAX_CHARS = 25000;
-const DEFAULT_CONTENT_MODE: HumanizerContentMode = "business";
-const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "fast";
-const DEFAULT_REFERENCE_STYLE: HumanizerReferenceStyle = "business";
-
-interface PresetChip {
-  id: HumanizerModelPreset;
-  label: string;
-  hint: string;
-  experimental?: boolean;
-  experimentalNeedsServerKey?: boolean;
-}
-
-const PRESET_CHIPS: PresetChip[] = [
-  { id: "fast", label: "Fast", hint: "Gemini Flash · 1 pass" },
-  { id: "balanced", label: "Balanced", hint: "Gemini Flash · 2 passes" },
-  { id: "quality", label: "Quality", hint: "Gemini Pro · 2 passes" },
-  {
-    id: "experimental-llama",
-    label: "Llama-3.3-70B",
-    hint: "OpenRouter · Meta · different fingerprint",
-    experimental: true,
-    experimentalNeedsServerKey: true,
-  },
-  {
-    id: "experimental-qwen",
-    label: "Qwen3-next-80B",
-    hint: "OpenRouter · Alibaba · different fingerprint",
-    experimental: true,
-    experimentalNeedsServerKey: true,
-  },
-  {
-    id: "experimental-minimax",
-    label: "MiniMax-m2.5",
-    hint: "OpenRouter · MiniMax · different fingerprint",
-    experimental: true,
-    experimentalNeedsServerKey: true,
-  },
-  {
-    id: "adversarial",
-    label: "Adversarial",
-    hint: "5 Gemini candidates · scored vs detector · lowest wins · ~25s",
-    experimental: true,
-  },
-  {
-    id: "adversarial-minimax",
-    label: "Adversarial-MiniMax",
-    hint: "5 MiniMax candidates · scored vs detector · best shot at essay-shape Copyleaks wall · ~25s",
-    experimental: true,
-    experimentalNeedsServerKey: true,
-  },
-];
-
-function isExperimentalPreset(preset: HumanizerModelPreset): boolean {
-  return preset.startsWith("experimental-");
-}
+const DEFAULT_CONTENT_MODE: HumanizerContentMode = "auto";
+const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "minimax";
+const DEFAULT_REFERENCE_STYLE: HumanizerReferenceStyle = "direct";
 
 export function HumanizerPage() {
-  const { userKey, hasSharedKey } = useApiKey();
   const [text, setText] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<HumanizeResult | null>(null);
@@ -113,12 +62,8 @@ export function HumanizerPage() {
     DEFAULT_MODEL_PRESET
   );
 
-  const hasKey = !!(userKey || hasSharedKey);
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   const overLimit = text.length > MAX_CHARS;
-  const usingExperimental = isExperimentalPreset(preset);
-  const activeChip = PRESET_CHIPS.find((c) => c.id === preset);
-  const showExperimentalBadge = !!activeChip?.experimental;
 
   function validateInputs() {
     if (!text.trim()) {
@@ -129,12 +74,6 @@ export function HumanizerPage() {
       toast.error(
         `Input is ${text.length.toLocaleString()} chars; max ${MAX_CHARS.toLocaleString()}`
       );
-      return false;
-    }
-    // Experimental presets route through the server's OpenRouter key — user
-    // doesn't need their own Gemini key to use them.
-    if (!usingExperimental && !hasKey) {
-      toast.error("Add your Gemini key in the menu (top right)");
       return false;
     }
     return true;
@@ -151,20 +90,15 @@ export function HumanizerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text,
-          sourceNotes: "",
-          writingSample: "",
           contentMode: DEFAULT_CONTENT_MODE,
           referenceStyle: DEFAULT_REFERENCE_STYLE,
           modelPreset: preset,
-          apiKey: usingExperimental ? undefined : userKey || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         if (data.rateLimit) {
-          setError(
-            "Daily quota exhausted. Add your own free Gemini key in the menu (top right) for unlimited use."
-          );
+          setError("Daily model quota exhausted. Try again after the quota resets.");
         } else {
           setError(data.error || "Rewrite failed");
         }
@@ -209,8 +143,9 @@ export function HumanizerPage() {
           Text Humanizer
         </h1>
         <p className="text-muted-foreground">
-          Paste website copy and rewrite it into clearer, more specific company
-          language without adding facts that were not in the original.
+          Paste website copy, travel content, essays, emails, or rough paragraphs
+          and rewrite them into clearer, more natural language without adding
+          facts that were not in the original.
         </p>
       </div>
 
@@ -243,7 +178,7 @@ export function HumanizerPage() {
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Paste website copy, service-page text, landing-page sections, or company content..."
+              placeholder="Paste website copy, a travel guide, an essay paragraph, an email, or any rough draft..."
               rows={16}
               className="resize-y font-sans text-base leading-relaxed"
             />
@@ -254,62 +189,50 @@ export function HumanizerPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Model</label>
-              {showExperimentalBadge && (
-                <span className="text-[10px] font-mono text-amber-500 uppercase tracking-wider">
-                  experimental
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_CHIPS.map((chip) => {
-                const active = preset === chip.id;
-                return (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    onClick={() => setPreset(chip.id)}
-                    disabled={loading}
-                    title={chip.hint}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                      active
-                        ? chip.experimental
-                          ? "border-amber-500 bg-amber-500/10 text-amber-400"
-                          : "border-primary bg-primary/10 text-primary"
-                        : "border-border/60 bg-muted/10 hover:border-border hover:bg-muted/30 text-muted-foreground"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {PRESET_CHIPS.find((c) => c.id === preset)?.hint}
-              {usingExperimental && " · uses server's OpenRouter key, your Gemini key is ignored"}
-            </p>
+          <div className="grid grid-cols-3 rounded-lg border border-border/60 bg-muted/10 p-1">
+            {[
+              { id: "minimax" as const, label: "Standard" },
+              { id: "minimax-deep" as const, label: "Deep" },
+              { id: "chain" as const, label: "Stealth" },
+            ].map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setPreset(option.id)}
+                disabled={loading}
+                className={`h-9 rounded-md text-sm font-medium transition-colors ${
+                  preset === option.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
 
           <Button
             onClick={humanize}
-            disabled={
-              loading ||
-              !text.trim() ||
-              overLimit
-            }
+            disabled={loading || !text.trim() || overLimit}
             className="w-full h-12 text-base"
           >
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Rewriting...
+                {preset === "minimax-deep"
+                  ? "Testing options..."
+                  : preset === "chain"
+                    ? "Chain rewriting..."
+                    : "Rewriting..."}
               </>
             ) : (
               <>
                 <Wand2 className="h-4 w-4" />
-                Rewrite website copy
+                {preset === "minimax-deep"
+                  ? "Deep rewrite text"
+                  : preset === "chain"
+                    ? "Stealth rewrite"
+                    : "Rewrite text"}
               </>
             )}
           </Button>
@@ -327,14 +250,18 @@ export function HumanizerPage() {
             </Card>
           )}
 
-          {!result && !error && !loading && <EmptyState hasKey={hasKey} />}
+          {!result && !error && !loading && <EmptyState />}
 
           {loading && (
             <Card className="border-border/60">
               <CardContent className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <div className="text-sm">
-                  Drafting a quick grounded rewrite...
+                  {preset === "minimax-deep"
+                    ? "Testing MiniMax draft options..."
+                    : preset === "chain"
+                      ? "Running 2-model chain rewrite..."
+                      : "Drafting a quick grounded rewrite..."}
                 </div>
               </CardContent>
             </Card>
@@ -347,7 +274,9 @@ export function HumanizerPage() {
               <div className="rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 bg-muted/40">
                   <span className="text-xs font-mono text-muted-foreground">
-                    {result.outputWordCount} words · {result.passes}-pass
+                    {result.outputWordCount} words ·{" "}
+                    {(result.candidateCount ?? 1).toLocaleString()} candidate
+                    {(result.candidateCount ?? 1) === 1 ? "" : "s"}
                   </span>
                   <Button
                     variant="ghost"
@@ -373,11 +302,11 @@ export function HumanizerPage() {
       <div className="rounded-xl border border-border/40 bg-muted/10 p-4 flex gap-3 text-sm">
         <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
         <div className="space-y-1 text-muted-foreground">
-          <div className="font-semibold text-foreground">External checks</div>
+          <div className="font-semibold text-foreground">Copy quality</div>
           <p className="leading-relaxed">
             The app optimizes for voice match, readability, originality, and
-            meaning retention. It should improve generic company copy without
-            turning the workflow into detector-score chasing.
+            meaning retention. It should improve generic writing without turning
+            the workflow into detector-score chasing.
           </p>
         </div>
       </div>
@@ -385,7 +314,7 @@ export function HumanizerPage() {
   );
 }
 
-function EmptyState({ hasKey }: { hasKey: boolean }) {
+function EmptyState() {
   return (
     <Card className="border-dashed border-border/60 bg-muted/10">
       <CardContent className="p-6 space-y-4">
@@ -395,15 +324,15 @@ function EmptyState({ hasKey }: { hasKey: boolean }) {
           </div>
           <h3 className="font-semibold">Ready for a draft</h3>
           <p className="text-sm text-muted-foreground">
-            Paste company website copy and rewrite when the draft is in.
+            Paste a draft and rewrite when the text is in.
           </p>
         </div>
         <Separator />
         <ul className="space-y-2 text-sm text-muted-foreground">
           {[
-            "One-box website copy rewrite",
+            "One-box rewrite workflow",
             "Generic phrase cleanup",
-            "Company-friendly business voice",
+            "Auto-detects copy, essays, travel guides, and emails",
             "Internal quality checks after rewriting",
             "Meaning preservation over flashy phrasing",
           ].map((line) => (
@@ -413,14 +342,6 @@ function EmptyState({ hasKey }: { hasKey: boolean }) {
             </li>
           ))}
         </ul>
-        {!hasKey && (
-          <div className="flex gap-2 items-start text-xs text-amber-500 pt-2 border-t border-border/40">
-            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-            <span>
-              No API key set yet. Open the menu (top right) to add one.
-            </span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -433,6 +354,21 @@ function QualitySummary({ result }: { result: HumanizeResult }) {
       ? 0
       : Math.round((delta / result.originalWordCount) * 100);
   const sign = delta >= 0 ? "+" : "";
+  const generatorNote =
+    result.quality.notes.find((note) => note.startsWith("Generator:")) ?? "";
+  const isFallback = generatorNote.toLowerCase().includes("local cleanup");
+  const isChainResult = generatorNote.includes("→");
+  const sourceLabel = isFallback
+    ? "Local fallback"
+    : isChainResult
+      ? "Stealth chain"
+      : generatorNote.toLowerCase().includes("minimax")
+        ? "MiniMax"
+        : generatorNote.toLowerCase().includes("gemma")
+          ? "Gemma"
+          : generatorNote.toLowerCase().includes("nemotron")
+            ? "Nemotron"
+            : "Model";
 
   return (
     <div className="rounded-xl border border-border/60 bg-muted/10 p-4 space-y-4">
@@ -440,6 +376,17 @@ function QualitySummary({ result }: { result: HumanizeResult }) {
         <div className="flex items-center gap-2">
           <Gauge className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-semibold">Internal quality</span>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+              isFallback
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                : isChainResult
+                  ? "border-blue-500/40 bg-blue-500/10 text-blue-500"
+                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
+            }`}
+          >
+            {sourceLabel}
+          </span>
         </div>
         <span className="text-xs font-mono text-muted-foreground">
           {result.originalWordCount} {"->"} {result.outputWordCount} words ·{" "}
@@ -455,6 +402,8 @@ function QualitySummary({ result }: { result: HumanizeResult }) {
         <ScorePill label="Variety" value={result.quality.sentenceVariety} />
         <ScorePill label="Specific" value={result.quality.specificity} />
         <ScorePill label="Meaning" value={result.quality.meaningRetention} />
+        <ScorePill label="Length" value={result.quality.lengthFit} />
+        <ScorePill label="Shape" value={result.quality.structureFit} />
       </div>
       <Separator />
       <ul className="space-y-1.5 text-xs text-muted-foreground">
