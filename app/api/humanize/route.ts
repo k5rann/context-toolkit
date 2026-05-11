@@ -22,9 +22,10 @@ const VALID_CONTENT_MODES: HumanizerContentMode[] = [
   "business",
 ];
 
+// Only chain-based presets are exposed. The free-tier MiniMax modes
+// (minimax, minimax-deep) are unreliable due to upstream rate limiting
+// and a single-model pass can't beat detectors anyway.
 const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
-  "minimax",
-  "minimax-deep",
   "chain",
   "chain-strict",
 ];

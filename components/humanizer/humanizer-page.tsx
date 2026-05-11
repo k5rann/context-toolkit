@@ -50,7 +50,7 @@ interface HumanizeResult {
 
 const MAX_CHARS = 25000;
 const DEFAULT_CONTENT_MODE: HumanizerContentMode = "auto";
-const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "minimax";
+const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "chain";
 const DEFAULT_REFERENCE_STYLE: HumanizerReferenceStyle = "direct";
 
 export function HumanizerPage() {
@@ -189,12 +189,10 @@ export function HumanizerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 rounded-lg border border-border/60 bg-muted/10 p-1">
+          <div className="grid grid-cols-2 rounded-lg border border-border/60 bg-muted/10 p-1">
             {[
-              { id: "minimax" as const, label: "Standard" },
-              { id: "minimax-deep" as const, label: "Deep" },
-              { id: "chain" as const, label: "Stealth" },
-              { id: "chain-strict" as const, label: "Strict" },
+              { id: "chain" as const, label: "Standard" },
+              { id: "chain-strict" as const, label: "Strict (keep all facts)" },
             ].map((option) => (
               <button
                 key={option.id}
@@ -220,24 +218,16 @@ export function HumanizerPage() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {preset === "minimax-deep"
-                  ? "Testing options..."
-                  : preset === "chain"
-                    ? "Chain rewriting..."
-                    : preset === "chain-strict"
-                      ? "Strict chain rewriting..."
-                      : "Rewriting..."}
+                {preset === "chain-strict"
+                  ? "Rewriting (strict)..."
+                  : "Rewriting..."}
               </>
             ) : (
               <>
                 <Wand2 className="h-4 w-4" />
-                {preset === "minimax-deep"
-                  ? "Deep rewrite text"
-                  : preset === "chain"
-                    ? "Stealth rewrite"
-                    : preset === "chain-strict"
-                      ? "Strict rewrite (keep all facts)"
-                      : "Rewrite text"}
+                {preset === "chain-strict"
+                  ? "Rewrite (keep all facts)"
+                  : "Rewrite"}
               </>
             )}
           </Button>
@@ -262,13 +252,9 @@ export function HumanizerPage() {
               <CardContent className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <div className="text-sm">
-                  {preset === "minimax-deep"
-                    ? "Testing MiniMax draft options..."
-                    : preset === "chain"
-                      ? "Running 2-model chain rewrite..."
-                      : preset === "chain-strict"
-                        ? "Running strict chain — preserving all facts..."
-                        : "Drafting a quick grounded rewrite..."}
+                  {preset === "chain-strict"
+                    ? "Running strict rewrite — preserving all facts..."
+                    : "Running 2-model chain rewrite..."}
                 </div>
               </CardContent>
             </Card>
