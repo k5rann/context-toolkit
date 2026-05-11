@@ -557,43 +557,59 @@ export function buildChainHop2Prompt({
     : `MOVE 1 — CUT AGGRESSIVELY. Drop entire sentences if they're decorative. Drop adjective chains. Drop 1 minor fact entirely. Output should be 60-85% of the source length.`;
 
   const move4 = strictFacts
-    ? `MOVE 4 — Do NOT add a tangential aside or "It must be noted" sentence. Strict facts mode means we don't introduce content that wasn't in the source.`
+    ? `MOVE 4 — Do NOT add a tangential aside or "It must be noted" sentence. Strict facts mode means: every factual claim must come from the source. But MOVES 2, 3, 5, 6, 7 still apply at full strength — rephrase aggressively, just don't drop or add facts.`
     : `MOVE 4 — Add 1 tangential sentence near the end as an aside. Something a writer would tack on as an afterthought, drawn from a real detail in the source text — NOT a generic logistics note. Pick a specific minor detail from the source and make it the aside.
   Style examples (DON'T copy these verbatim — make up your own from the actual source):
   - "It must be noted that X is also included."
   - "Note: Y is optional but recommended."
   - "Worth mentioning — Z is available on request."`;
 
-  return `Rewrite the TEXT below as if YOU are a non-native English copywriter at a small Dubai tour agency. NOT polished marketing prose. Real, slightly clunky, lossy human writing. ${targetMin}-${targetMax} words. Keep proper nouns, prices, durations, and place names.${strictFacts ? "\n\n>> STRICT FACTS MODE: do not drop or alter any factual content. Reshape the prose only." : ""}
+  // Examples use abstract placeholders so the model doesn't verbatim-copy
+  // content from the examples into outputs (a real bug observed 2026-05-11
+  // when Dubai/Bedouin example phrases leaked into a Thailand itinerary).
+  return `Rewrite the TEXT below as a non-native English copywriter would: real, slightly clunky, lossy human writing. NOT polished marketing prose. ${targetMin}-${targetMax} words. Keep proper nouns, prices, durations, and place names from the source.${strictFacts ? "\n\n>> STRICT FACTS MODE: do not drop or alter any factual content from the source. Reshape the prose only — but still apply MOVES 2, 3, 5, 6, 7 aggressively." : ""}
+
+DO NOT copy any phrasing from the examples below — they are abstract patterns, not content to use. Generate fresh phrasing from the actual source.
 
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
 
-MOVE 2 — Use these connectors that AI never uses in prose: "namely", "etc.", "i.e.", "for example,", "in addition,". Sprinkle 1-2 of them naturally.
-  Example: "various cultural activities that include photography from the dune, a camel ride, application of traditional henna, etc."
+MOVE 2 — Use these connectors that AI never uses in prose: "namely", "etc.", "i.e.", "for example,", "in addition,". Sprinkle 1-2 of them naturally where lists or details appear in the source.
+  Abstract pattern: "[list of things from source], etc."
+  Abstract pattern: "[main thing], namely [details from source]."
 
 MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive voice is fine. ESL-sounding constructions are fine.
-  Example: "rest and refresh their bodies with drinks served to them" (not "enjoy a welcome drink")
+  Abstract pattern: prefer "[thing] is provided to guests" over "guests enjoy [thing]"
+  Abstract pattern: prefer "you will be going to [place]" over "you visit [place]"
+  Aggressively smooth-out phrases like "making each moment unforgettable", "experience the magic", "every aspect of your journey" — replace with plain factual statements or cut them.
 
 ${move4}
 
 MOVE 5 — Tense/POV slip is FINE. Mix "you", "travelers", "guests", "our visitors" across paragraphs. Don't unify them.
 
-MOVE 6 — Pick simpler/weaker verb where you can. "commences" → "starts off". "navigate" → "drive across". "engage in" → "do" / "take part in". But don't go full Latinate-purge — leave some intact.
+MOVE 6 — Pick simpler/weaker verb where you can. Replace formal/Latinate verbs:
+  - "commences" / "begins" → "starts off"
+  - "navigate" → "drive across" / "go through"
+  - "engage in" → "do" / "take part in"
+  - "experience" → "see" / "have" / cut entirely
+  - "embark on" → "go on" / "do"
+  - "discover" → "see" / "find"
+  But don't replace EVERY verb — leave some intact.
 
-MOVE 7 — Don't end with marketing wrap-up. Stop on a small detail or an aside, not a summary or CTA.
+MOVE 7 — Don't end with marketing wrap-up. Stop on a small detail or a plain factual statement, not a summary or CTA. Cut phrases like "every moment is designed to be unforgettable", "an experience you will cherish forever".
 
 DO NOT:
 - Use em-dashes for stylistic effect (commercial humanizers don't)
 - Use contractions everywhere (some yes, some no — humans aren't consistent)
 - Write punchy single-word sentences (that's a copywriting move, not a human-writing move)
 - Improve clarity or flow — we WANT it slightly clunky
+- Copy any specific nouns or details from the example patterns above — use ONLY content from the source TEXT
 
 ${MODE_GUIDANCE[contentMode]}
 
 TEXT:
 ${text}
 
-REWRITTEN (apply all moves; output ${targetMin}-${targetMax} words):`;
+REWRITTEN (apply all moves; use ONLY content from the source TEXT above; output ${targetMin}-${targetMax} words):`;
 }
