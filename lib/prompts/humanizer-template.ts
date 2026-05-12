@@ -664,28 +664,67 @@ MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive
   Abstract pattern: prefer "[thing] is provided to guests" over "guests enjoy [thing]"
   Abstract pattern: prefer "you will be going to [place]" over "you visit [place]"
 
-  CRITICAL — KILL AI CLICHES VERBATIM. These phrases MUST NOT survive into the output. If you see them in the source, replace with the plain alternative or cut them:
+  CRITICAL — KILL AI CLICHES VERBATIM. These phrases MUST NOT survive into the output. If you see them in the source, replace with the plain alternative or cut them.
+
+  TRAVEL CLICHES:
   - "majestic [animal]" → just "[animal]" or "big [animal]"
   - "dazzling [show/performance]" → cut "dazzling" or replace with "the [show]"
   - "sun-kissed shores" / "sunny shores" → "beaches" or "the coast"
   - "turquoise waters" → "blue water"
   - "pristine [anything]" → cut "pristine"
   - "leisure, adventure, and cultural immersion" → "things to do"
-  - "spellbinding" / "captivating" / "mesmerizing" / "breathtaking" → cut or "interesting"
   - "scenic drive" → just "drive"
   - "vibrant [city/streets]" → "busy" or cut
   - "rich cultural tapestry" → "the culture"
   - "blend seamlessly" → cut or "mix"
   - "the perfect mix of X, Y, and Z" → "X, Y, Z" (just the list)
-  - "unforgettable" / "magical" / "enchanting" → cut
   - "a highlight of [trip]" → cut or just describe
   - "combines the best of [A] and [B]" → "is in [A] and [B]"
   - "marvel at" → "see"
   - "indulge in" → "do" or cut
-  - "thrilling" → cut or "fun"
-  - Any phrase ending in "...await" or "...awaits" → rewrite as plain statement
 
-  If ANY of these cliches appear in your output, you have failed. Reread your output and replace them.
+  EMOTIONAL/HYPE CLICHES (kill all inflections — captivate/captivates/captivated/captivating ALL count):
+  - "captivat*" (any form: captivate, captivates, captivating, captivated) → "watch" / cut
+  - "mesmeriz*" / "mesmerised" / "mesmerizing" → cut
+  - "spellbind*" / "spellbinding" → cut
+  - "breathtak*" / "breathtaking" → cut or "stunning"
+  - "unforgettable" / "magical" / "enchanting" / "enchant*" → cut
+  - "thrilling" / "thrill-seekers" / "thrill-seeker" → cut or rephrase plainly
+  - "truly impressive" / "truly remarkable" / "truly" — drop "truly" entirely
+  - "world's most [adjective]" / "world-class" → "very [adjective]" or cut
+  - "remarkable [noun]" / "remarkable" → cut "remarkable"
+  - "impressive specimens" / "impressive [noun]" → cut "impressive"
+  - "extraordinary [anything]" → cut adjective
+  - "unique [X] adventure" / "unique [X] experience" / "unique [X] interactions" → cut adjective stack, just "[X]"
+  - "for all" / "for everyone" (as a marketing tag) → cut or specify
+  - "something for everyone" → cut entirely
+  - Any phrase ending in "...await" or "...awaits" → plain statement
+  - "play a role" / "plays a role" / "play[s] [a/the] [adjective] role" → cut or "matters"
+
+  TECH/MARKETING CLICHES (kill all inflections):
+  - "advanced [anything]" (civilization, robotics, robots, technology, tech) → cut "advanced"
+  - "groundbreaking" / "ground-breaking" → cut or "new"
+  - "next-generation" / "next generation" (with or without hyphen) → "new"
+  - "purpose-built" / "purpose built" → cut or "made for"
+  - "high-end" / "top-tier" / "premium" → cut or "good"
+  - "state-of-the-art" / "state of the art" → "modern" or cut
+  - "cutting-edge" / "cutting edge" → "modern" or cut
+  - "engineering behind this accomplishment" / "engineering marvel" → "how it was built"
+  - "architectural marvel" / "architectural masterpiece" / "architectural [adjective]" → just "building"
+  - "striking [noun]" (façade, design, structure, building) → cut "striking"
+  - "newer attraction that has become [adjective] popular" → "[name] is popular"
+  - "[adjective] specimens / residents / creatures / wonders / inventions" → cut adjective
+  - "exemplifies" / "embodies" / "showcases" / "represents [the/a] [adjective]" → "shows" or cut
+  - "transport you / visitors / guests [somewhere]" → "take you / them [somewhere]"
+  - "renowned [profession]" (architect, chef, designer) → cut "renowned"
+
+  PATTERN — adjective stacks: ANY "[adjective] [adjective] [noun]" pattern that sounds like a brochure (e.g. "expansive 3,000-square-meter snow park", "diverse winter experiences", "comprehensive selection") → keep at most ONE adjective, or just the noun.
+
+  PATTERN — "X is a wonder" / "X exemplifies Y" / "X represents Z": cut the meta-framing. Just describe what X is plainly.
+
+  If ANY 2-word AI marketing phrase appears in your output (whether listed here or not), you have failed. Reread your output and ask: does this sound like a brochure or a tour-operator landing page? If yes, plain-ify it.
+
+  CRITICAL: words like "captivate", "captivating", "captivated", "captivates" are ALL the same banned cliche in different grammatical forms. Killing the adjective ("captivating") but keeping the verb ("captivate") doesn't help — the AI signal is identical. Apply the kill rule across ALL inflections of every entry above. Same applies to "thrill" / "thrilling" / "thrilled", "mesmerize" / "mesmerizing" / "mesmerized", "enchant" / "enchanting" / "enchanted", and so on.
 
 ${move4}
 
