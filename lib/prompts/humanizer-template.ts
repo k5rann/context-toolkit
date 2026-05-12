@@ -469,6 +469,87 @@ OUTPUT:`;
 }
 
 /**
+ * Vocabulary-only substitution prompt. Used by BOTH hops in chain-strict mode.
+ *
+ * Strategy: hold the factual line and structure of every sentence; only swap
+ * out the complex/Latinate/marketing-inflated words for simpler everyday
+ * equivalents. Each hop catches words the previous model missed.
+ *
+ * This is the opposite of the chain-standard hop 2 degradation script. There
+ * we strategically degrade structure + cut content. Here we touch only
+ * surface vocabulary. Better fact preservation, sometimes weaker detection
+ * evasion — but cleaner trade for users who can't afford to lose facts.
+ */
+export function buildVocabularySwapPrompt({
+  text,
+  contentMode,
+}: {
+  text: string;
+  contentMode: HumanizerContentMode;
+}): string {
+  const wc = countWords(text);
+  // Output stays within ±5% of input length — this is a vocab swap, not a rewrite.
+  const minWords = Math.max(1, Math.floor(wc * 0.95));
+  const maxWords = Math.max(minWords + 1, Math.ceil(wc * 1.05));
+
+  return `Rewrite the TEXT below by ONLY swapping out complex/Latinate/marketing-inflated words for simpler everyday equivalents. KEEP EVERYTHING ELSE IDENTICAL.
+
+ABSOLUTE RULES:
+- Keep every fact, name, number, price, place, date, and proper noun EXACTLY as written.
+- Keep every sentence structure and clause order.
+- Output ${minWords}-${maxWords} words (within ±5% of input length).
+- Do NOT cut, add, reorder, or merge sentences.
+
+APPLY THESE WORD SWAPS (where they appear):
+
+Latinate verbs:
+  utilize → use         facilitate → help        demonstrate → show
+  ensure → make sure    leverage → use           commence → start
+  navigate → go across  embark on → start        comprise → include
+  discover → find       transcend → go beyond    encompass → include
+  ascend → go up        possess → have
+
+Inflated adjectives:
+  comprehensive → full       extensive → wide          remarkable → great
+  exceptional → great        unparalleled → top        paramount → main
+  meticulously → carefully   profound → deep           pivotal → key
+  transformative → big
+
+Marketing clichés (swap or remove if floral):
+  seamless → smooth          captivating → fun         mesmerizing → amazing
+  immersive → engaging       vibrant → lively          bustling → busy
+  pristine → clean           magnificent → great       charming → nice
+  exquisite → fine           breathtaking → stunning   stunning → great
+  unforgettable → memorable  unrivaled → top           opulent → fancy
+  lavish → fancy             enchanting → lovely
+
+Stiff connectors:
+  furthermore → also     moreover → also       additionally → and / plus
+  hence → so             thus → so             therefore → so
+
+Stuffy verbs:
+  witness → see          marvel at → look at   indulge in → enjoy
+  partake in → take part in
+
+DO NOT:
+- Cut any sentence
+- Add any new sentence or aside
+- Reorder facts or clauses
+- Change any name, number, price, date, or proper noun
+- Paraphrase whole clauses — touch only the words listed above (or close equivalents)
+- Add em-dashes, asides, or transitions that aren't in the source
+
+If a sentence has no swappable words from the lists above, leave it ALONE.
+
+${MODE_GUIDANCE[contentMode]}
+
+TEXT:
+${text}
+
+REWRITTEN (same structure, simpler vocabulary only, ${minWords}-${maxWords} words):`;
+}
+
+/**
  * Hop 1 prompt: structural rewrite based on the 12-level human writing framework.
  * Targets the top AI detection signals: uniform sentence length, banned vocabulary,
  * predictable structure, second-paragraph retreat, flat pacing, and absence of

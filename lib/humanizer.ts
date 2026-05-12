@@ -4,6 +4,7 @@ import {
   buildChainHop1Prompt,
   buildChainHop2Prompt,
   buildSubstanceRepairPrompt,
+  buildVocabularySwapPrompt,
   buildVoiceRewritePrompt,
   HumanizerContentMode,
   HumanizerModelPreset,
@@ -1243,15 +1244,28 @@ async function humanizeChain(
   // Use the lighter chainRefine prompt (not the full voiceRewrite prompt)
   // to stay under free-tier latency limits. Quality scoring + repair pass
   // handle phrase bans and structure rules post-hoc.
+  // Chain-strict uses a fundamentally different strategy: vocabulary-only
+  // substitution. Both hops apply the same word-swap prompt — each model
+  // catches words the other missed. Structure, facts, and clause order
+  // stay identical. Strict mode is for content where dropping facts isn't
+  // acceptable, even at the cost of slightly weaker detection evasion.
+  const isStrictMode = modelPreset === "chain-strict";
+
   try {
-    console.log(`[chain] hop 1 starting — model: ${preset.rewriteModel}, budget: ${Math.round((chainDeadline - Date.now()) / 1000)}s`);
+    console.log(`[chain] hop 1 starting — model: ${preset.rewriteModel}, mode: ${modelPreset}, budget: ${Math.round((chainDeadline - Date.now()) / 1000)}s`);
+    const hop1Prompt = isStrictMode
+      ? buildVocabularySwapPrompt({ text: trimmed, contentMode })
+      : buildChainHop1Prompt({ text: trimmed, contentMode });
+    // Strict mode runs at lower temperature — we want deterministic word
+    // swaps, not creative reshaping.
+    const hop1Temp = isStrictMode ? 0.4 : preset.temperatures[0];
     const hop1 = await generateWithFallback({
       apiKey,
-      prompt: buildChainHop1Prompt({ text: trimmed, contentMode }),
+      prompt: hop1Prompt,
       primaryModel: preset.rewriteModel,
       fallbackModels: preset.fallbackModels,
       excludeModels: preset.refineModel ? [preset.refineModel] : [],
-      temperature: preset.temperatures[0],
+      temperature: hop1Temp,
       timeoutMs: hopTimeout,
       maxAttempts: 2,
       deadlineMs: chainDeadline,
@@ -1283,11 +1297,16 @@ async function humanizeChain(
 
   if (preset.refineModel && chainDeadline - Date.now() > 8000) {
     try {
-      // Hop 2 uses a higher temperature than hop 1. The point of hop 2 is
-      // to disrupt the polished marketing prose that hop 1 sometimes leaves
-      // intact. At equal temp, DeepSeek tends to "polish" Llama's output
-      // back toward AI-sounding marketing copy. +0.10 fights that.
-      const hop2Temp = Math.min(preset.temperatures[0] + 0.1, 1.3);
+      // Hop 2 strategy diverges by mode:
+      // - Standard: degradation script at +0.10 temp to disrupt smooth prose
+      // - Strict: same vocab-swap prompt at low temp — second model catches
+      //   words the first missed, no structural changes
+      const hop2Temp = isStrictMode
+        ? 0.4
+        : Math.min(preset.temperatures[0] + 0.1, 1.3);
+      const hop2Prompt = isStrictMode
+        ? buildVocabularySwapPrompt({ text: hop1Output, contentMode })
+        : buildChainHop2Prompt({ text: hop1Output, contentMode });
       // Use shorter per-model timeout for hop 2 so we can cycle through
       // ALL fallback models within the chain deadline. Without this, one
       // slow model exhausts the budget and we fall back to 1-hop output
@@ -1296,11 +1315,7 @@ async function humanizeChain(
       const hop2PerModelTimeout = 15000;
       const hop2 = await generateWithFallback({
         apiKey,
-        prompt: buildChainHop2Prompt({
-          text: hop1Output,
-          contentMode,
-          strictFacts: modelPreset === "chain-strict",
-        }),
+        prompt: hop2Prompt,
         primaryModel: preset.refineModel,
         fallbackModels: preset.fallbackModels,
         excludeModels: [hop1Model],
