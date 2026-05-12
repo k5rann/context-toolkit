@@ -53,6 +53,8 @@ const DEFAULT_CONTENT_MODE: HumanizerContentMode = "auto";
 const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "chain";
 const DEFAULT_REFERENCE_STYLE: HumanizerReferenceStyle = "direct";
 
+const HUMANIZER_HANDOFF_KEY = "humanizer-prefill-text";
+
 export function HumanizerPage() {
   const [text, setText] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -61,6 +63,21 @@ export function HumanizerPage() {
   const [preset, setPreset] = React.useState<HumanizerModelPreset>(
     DEFAULT_MODEL_PRESET
   );
+
+  // Receive handoff from /voice "Send to Humanizer" button. sessionStorage
+  // means it survives the navigation but doesn't persist across tabs.
+  React.useEffect(() => {
+    try {
+      const handoff = sessionStorage.getItem(HUMANIZER_HANDOFF_KEY);
+      if (handoff && handoff.trim()) {
+        setText(handoff);
+        sessionStorage.removeItem(HUMANIZER_HANDOFF_KEY);
+        toast.success("Transcript loaded from Voice");
+      }
+    } catch {
+      // sessionStorage can throw in private mode; ignore
+    }
+  }, []);
 
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   const overLimit = text.length > MAX_CHARS;

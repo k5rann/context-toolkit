@@ -183,9 +183,9 @@ export const TOOLS: Tool[] = [
     id: "humanizer",
     href: "/humanizer",
     name: "Text Humanizer",
-    tagline: "Website copy in. Cleaner rewrite out.",
+    tagline: "AI text in. Detector-proof rewrite out.",
     description:
-      "Rewrites rough company and website copy through a single MiniMax-powered flow, with internal scores for readability, repetition, generic phrasing, variety, and meaning.",
+      "Two-model chain rewrite (Llama → DeepSeek) with strategic degradation hop 2. Beats Copyleaks at 0% AI on the enterprise platform scanner. Standard mode for max evasion; Strict mode preserves every fact.",
     status: "live",
     icon: "Sparkles",
   },
