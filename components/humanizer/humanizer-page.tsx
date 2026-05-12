@@ -206,25 +206,47 @@ export function HumanizerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 rounded-lg border border-border/60 bg-muted/10 p-1">
-            {[
-              { id: "chain" as const, label: "Standard" },
-              { id: "chain-strict" as const, label: "Strict (keep all facts)" },
-            ].map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setPreset(option.id)}
-                disabled={loading}
-                className={`h-9 rounded-md text-sm font-medium transition-colors ${
-                  preset === option.id
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                } disabled:cursor-not-allowed disabled:opacity-60`}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 rounded-lg border border-border/60 bg-muted/10 p-1">
+              {[
+                { id: "chain" as const, label: "Standard" },
+                { id: "chain-strict" as const, label: "Strict (keep all facts)" },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setPreset(option.id)}
+                  disabled={loading}
+                  className={`h-9 rounded-md text-sm font-medium transition-colors ${
+                    preset === option.id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="px-1 text-xs text-muted-foreground leading-relaxed">
+              {preset === "chain-strict" ? (
+                <span>
+                  <strong className="text-foreground">Strict:</strong> swaps
+                  complex words only. Best for{" "}
+                  <strong className="text-foreground">truly unique</strong>{" "}
+                  content (custom tours, original blogs). If the source
+                  duplicates competitor sites, use Standard instead — Strict
+                  can&apos;t break verbatim phrase matches.
+                </span>
+              ) : (
+                <span>
+                  <strong className="text-foreground">Standard:</strong>{" "}
+                  restructures sentences. Best for product pages,
+                  &quot;About&quot;/&quot;Why Choose&quot; copy, or any source
+                  that may share phrasing with competitors. May drop 1 minor
+                  decorative detail.
+                </span>
+              )}
+            </div>
           </div>
 
           <Button
