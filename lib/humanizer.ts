@@ -148,7 +148,16 @@ function stripPreamble(s: string): string {
       ""
     )
     .replace(/^(?:rewritten|revised|edited|polished|final)(?:\s+text)?\s*:\s*/i, "")
-    .replace(/^output\s*:\s*/i, "");
+    .replace(/^output\s*:\s*/i, "")
+    // Strip markdown preamble lines like:
+    //   "**Rewritten version (224 words):**"
+    //   "**Rewritten (apply all moves; output 95-110 words):**"
+    //   "**Output:**"
+    // These leak when the model wraps its answer with its own header.
+    .replace(/^\*\*[^*\n]{1,120}\*\*\s*:?\s*\n+/m, "")
+    .replace(/^\s*\*\*(?:rewritten|revised|edited|output|final)[^*\n]*\*\*\s*\n+/im, "")
+    // Strip standalone heading lines containing only "Rewritten" / "Output"
+    .replace(/^\s*(?:rewritten|revised|output|final)\s*\([^\n]*\)\s*:?\s*\n+/im, "");
 }
 
 function clean(raw: string): string {
@@ -1214,6 +1223,214 @@ async function generateWithFallback({
 }
 
 /**
+ * Splits a long input into chunks small enough for a single chain pass to
+ * reliably handle (~300-500 words each). Tries to split on natural
+ * boundaries — double newlines, then numbered list items, then sentences —
+ * to keep paragraph and list structure intact through the rewrite.
+ *
+ * Returns chunks paired with the EXACT separator string that followed each
+ * in the original, so we can rebuild the output preserving line breaks.
+ */
+interface InputChunk {
+  text: string;
+  /** Whatever separator was between this chunk and the next in the input.
+   *  Empty string for the last chunk. Preserved verbatim. */
+  separator: string;
+}
+
+function chunkLongInput(input: string, targetWords = 350): InputChunk[] {
+  const trimmed = input.trim();
+  // Split on paragraph breaks first — most travel/marketing content uses
+  // double-newlines between sections. Captures the separator so we can
+  // restore it on output.
+  const blockMatches = Array.from(trimmed.matchAll(/(\n\s*\n+)/g));
+  const blockBreaks: number[] = blockMatches.map((m) => m.index ?? 0);
+
+  type Block = { text: string; separator: string };
+  const blocks: Block[] = [];
+  let cursor = 0;
+  for (let i = 0; i < blockBreaks.length; i++) {
+    const breakStart = blockBreaks[i];
+    const breakMatch = blockMatches[i];
+    const sep = breakMatch[0];
+    blocks.push({
+      text: trimmed.slice(cursor, breakStart),
+      separator: sep,
+    });
+    cursor = breakStart + sep.length;
+  }
+  // Final block (after the last paragraph break, or the whole input if no breaks)
+  if (cursor < trimmed.length) {
+    blocks.push({ text: trimmed.slice(cursor), separator: "" });
+  }
+
+  // Now group adjacent blocks into chunks of ~targetWords. Each chunk may
+  // contain multiple paragraphs joined by their original separators.
+  const chunks: InputChunk[] = [];
+  let buffer = "";
+  let bufferSeparator = "";
+  let bufferWords = 0;
+
+  for (const block of blocks) {
+    const blockWords = block.text.split(/\s+/).filter(Boolean).length;
+    if (bufferWords + blockWords > targetWords && buffer) {
+      // Close out the current chunk; the separator carried by the LAST
+      // block in the buffer is what should sit between this chunk and the next.
+      chunks.push({ text: buffer, separator: bufferSeparator });
+      buffer = block.text;
+      bufferSeparator = block.separator;
+      bufferWords = blockWords;
+    } else {
+      if (buffer) {
+        buffer = buffer + bufferSeparator + block.text;
+      } else {
+        buffer = block.text;
+      }
+      bufferSeparator = block.separator;
+      bufferWords += blockWords;
+    }
+  }
+  if (buffer) {
+    chunks.push({ text: buffer, separator: bufferSeparator });
+  }
+
+  // If we ended up with a single huge chunk (no paragraph breaks at all in
+  // the source), fall back to sentence-level splitting on that chunk.
+  if (chunks.length === 1 && bufferWords > targetWords * 1.5) {
+    return splitOnSentences(trimmed, targetWords);
+  }
+
+  return chunks;
+}
+
+function splitOnSentences(input: string, targetWords: number): InputChunk[] {
+  const sentences = input.split(/(?<=[.!?])\s+/);
+  const chunks: InputChunk[] = [];
+  let buffer = "";
+  let bufferWords = 0;
+
+  for (const s of sentences) {
+    const sWords = s.split(/\s+/).filter(Boolean).length;
+    if (bufferWords + sWords > targetWords && buffer) {
+      chunks.push({ text: buffer.trim(), separator: " " });
+      buffer = s + " ";
+      bufferWords = sWords;
+    } else {
+      buffer += s + " ";
+      bufferWords += sWords;
+    }
+  }
+  if (buffer.trim()) {
+    chunks.push({ text: buffer.trim(), separator: "" });
+  }
+  return chunks;
+}
+
+/**
+ * Chunked chain rewrite for long inputs. Splits into ~350-word chunks at
+ * natural section boundaries, dispatches all chunks through the standard
+ * humanizeChain in parallel, then stitches the outputs back together
+ * preserving the original paragraph separators.
+ *
+ * Total wall-clock time is roughly max(chunk time) + coordination overhead,
+ * not sum(chunk times). A 4000-word input runs ~12 chunks at once and
+ * completes in ~40-60s instead of timing out.
+ */
+async function humanizeChainChunked(
+  trimmed: string,
+  contentMode: HumanizerContentMode,
+  referenceStyle: HumanizerReferenceStyle,
+  modelPreset: HumanizerModelPreset,
+  apiKey: string,
+  preset: (typeof PRESET_MODELS)[HumanizerModelPreset],
+  originalWordCount: number
+): Promise<HumanizeResult> {
+  const chunks = chunkLongInput(trimmed);
+  console.log(`[chunked] split ${originalWordCount} words into ${chunks.length} chunks`);
+
+  // Run all chunks through the chain concurrently. Each chunk gets its own
+  // chain deadline scaled to chunk size, so a 350-word chunk gets ~55s of
+  // budget — plenty for the 2-hop fallback rotation.
+  const chunkPromises = chunks.map((chunk) =>
+    humanizeChain(
+      chunk.text,
+      contentMode,
+      referenceStyle,
+      modelPreset,
+      apiKey,
+      preset,
+      chunk.text.split(/\s+/).filter(Boolean).length
+    ).then(
+      (result) => ({ ok: true as const, result, separator: chunk.separator }),
+      // If a chunk fails the chain (e.g. model unavailable at the tail end
+      // of the fallback rotation), preserve the ORIGINAL chunk text so the
+      // user at least gets their content back. Failure should be the
+      // exception, not the rule.
+      (err) => ({
+        ok: false as const,
+        error: err,
+        fallbackText: chunk.text,
+        separator: chunk.separator,
+      })
+    )
+  );
+
+  const results = await Promise.all(chunkPromises);
+
+  // Stitch the outputs back together using each chunk's original separator.
+  let stitched = "";
+  let successfulChunks = 0;
+  let failedChunks = 0;
+  let generatorTrail = "";
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.ok) {
+      stitched += r.result.output;
+      successfulChunks += 1;
+      if (i === 0) {
+        // Use the first successful chunk's generator note as representative
+        const genNote = r.result.quality.notes.find((n) =>
+          n.startsWith("Generator:")
+        );
+        if (genNote) generatorTrail = genNote;
+      }
+    } else {
+      stitched += r.fallbackText;
+      failedChunks += 1;
+    }
+    stitched += r.separator;
+  }
+
+  stitched = stitched.trimEnd();
+
+  // Aggregate quality scoring on the full stitched output
+  const finalQuality = scoreQuality(trimmed, stitched);
+  finalQuality.notes = [
+    generatorTrail ||
+      `Generator: ${preset.rewriteModel} -> ${preset.refineModel}`,
+    `Mode: ${preset.label} (chunked × ${chunks.length})`,
+    failedChunks > 0
+      ? `Chain: ${successfulChunks}/${chunks.length} chunks rewritten; ${failedChunks} fell back to source`
+      : `Chain: all ${chunks.length} chunks rewritten in parallel`,
+    ...finalQuality.notes,
+  ];
+
+  return {
+    output: stitched,
+    pass1Output: stitched,
+    contentMode,
+    referenceStyle,
+    modelPreset,
+    originalWordCount,
+    outputWordCount: wordCount(stitched),
+    passes: 2,
+    candidateCount: chunks.length,
+    quality: finalQuality,
+  };
+}
+
+/**
  * 2-hop chain rewrite: Model A rewrites the original → Model B rewrites
  * Model A's output.  Each hop uses a different model so the final text
  * carries a mixed perplexity fingerprint that confuses AI detectors.
@@ -1233,10 +1450,17 @@ async function humanizeChain(
   originalWordCount: number
 ): Promise<HumanizeResult> {
   const chainStart = Date.now();
-  // Reserve 4s for scoring + result assembly; the route-level timeout (55s)
-  // is the hard ceiling, so we aim to finish by 50s.
-  const chainDeadline = chainStart + 50000;
-  const hopTimeout = preset.hopTimeoutMs ?? 25000;
+  // Chain deadline scales with input length. Base 45s for single-chunk
+  // inputs, +3s per 100 words. Capped at 270s (leaves 30s for response
+  // assembly under the route's 280s timeout, which itself sits under
+  // Vercel's 300s function limit).
+  const inputWordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  const scaledBudget = Math.min(
+    45_000 + Math.ceil(inputWordCount / 100) * 3_000,
+    270_000
+  );
+  const chainDeadline = chainStart + scaledBudget;
+  const hopTimeout = preset.hopTimeoutMs ?? 25_000;
   let hop1Output: string;
   let hop1Model: string;
 
@@ -1439,6 +1663,23 @@ export async function humanize({
 
   // Chain presets use a dedicated multi-hop path
   if (preset.refineModel) {
+    // Long inputs are chunked and processed in parallel. Single-model calls
+    // can't reliably rewrite 1000+ words in one go (token limits, latency
+    // variance, format drift). Splitting on natural section boundaries +
+    // parallel chain dispatch is the only way to scale to the full 25k char
+    // UI cap.
+    const CHUNK_THRESHOLD_WORDS = 500;
+    if (originalWordCount > CHUNK_THRESHOLD_WORDS) {
+      return humanizeChainChunked(
+        trimmed,
+        contentMode,
+        referenceStyle,
+        modelPreset,
+        apiKey,
+        preset,
+        originalWordCount
+      );
+    }
     return humanizeChain(
       trimmed,
       contentMode,

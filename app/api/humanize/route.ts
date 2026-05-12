@@ -10,7 +10,10 @@ import {
 } from "@/lib/humanizer-reference-library";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// 300s is Vercel Pro tier max — gives enough headroom to humanize the full
+// 25,000 character UI cap via chunked parallel processing. No cost change
+// vs the previous 60s; same plan, larger budget.
+export const maxDuration = 300;
 
 const VALID_CONTENT_MODES: HumanizerContentMode[] = [
   "auto",
@@ -163,18 +166,26 @@ export async function POST(req: NextRequest) {
       apiKey,
     };
 
+    // Timeout scales with input length. Chunked processing means a 4000-word
+    // input runs ~12 chunks in parallel, each taking ~20-30s — total ~40s.
+    // A 200-word input is single-chunk, ~30s. Give 3x headroom for retries +
+    // model-fallback rotation, capped to Vercel's 300s function limit.
+    const inputWords = text.split(/\s+/).filter(Boolean).length;
     let timeoutMs: number;
     let timeoutMessage: string;
     if (resolvedPreset === "chain" || resolvedPreset === "chain-strict") {
-      timeoutMs = 55000;
+      // Base 45s + ~3s per 100 words of input. Capped at 280s (leaves 20s
+      // headroom under Vercel's 300s function limit for response packaging).
+      const scaled = Math.min(45_000 + Math.ceil(inputWords / 100) * 3_000, 280_000);
+      timeoutMs = scaled;
       timeoutMessage =
-        "Chain rewrite timed out. One or both models may be slow; try Standard mode or retry in a moment.";
+        "Chain rewrite timed out. The input may be very long or model fallbacks may all be slow; try a shorter selection or retry in a moment.";
     } else if (resolvedPreset === "minimax-deep") {
-      timeoutMs = 55000;
+      timeoutMs = 55_000;
       timeoutMessage =
         "Deep MiniMax timed out while testing draft options. The MiniMax free tier may be queued; try Standard mode or retry in a moment.";
     } else {
-      timeoutMs = 50000;
+      timeoutMs = 50_000;
       timeoutMessage =
         "MiniMax timed out while rewriting. The MiniMax free tier may be queued; retry in a moment.";
     }
