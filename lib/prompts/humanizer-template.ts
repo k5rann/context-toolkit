@@ -663,7 +663,29 @@ MOVE 2 — Use these connectors that AI never uses in prose: "namely", "etc.", "
 MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive voice is fine. ESL-sounding constructions are fine.
   Abstract pattern: prefer "[thing] is provided to guests" over "guests enjoy [thing]"
   Abstract pattern: prefer "you will be going to [place]" over "you visit [place]"
-  Aggressively smooth-out phrases like "making each moment unforgettable", "experience the magic", "every aspect of your journey" — replace with plain factual statements or cut them.
+
+  CRITICAL — KILL AI CLICHES VERBATIM. These phrases MUST NOT survive into the output. If you see them in the source, replace with the plain alternative or cut them:
+  - "majestic [animal]" → just "[animal]" or "big [animal]"
+  - "dazzling [show/performance]" → cut "dazzling" or replace with "the [show]"
+  - "sun-kissed shores" / "sunny shores" → "beaches" or "the coast"
+  - "turquoise waters" → "blue water"
+  - "pristine [anything]" → cut "pristine"
+  - "leisure, adventure, and cultural immersion" → "things to do"
+  - "spellbinding" / "captivating" / "mesmerizing" / "breathtaking" → cut or "interesting"
+  - "scenic drive" → just "drive"
+  - "vibrant [city/streets]" → "busy" or cut
+  - "rich cultural tapestry" → "the culture"
+  - "blend seamlessly" → cut or "mix"
+  - "the perfect mix of X, Y, and Z" → "X, Y, Z" (just the list)
+  - "unforgettable" / "magical" / "enchanting" → cut
+  - "a highlight of [trip]" → cut or just describe
+  - "combines the best of [A] and [B]" → "is in [A] and [B]"
+  - "marvel at" → "see"
+  - "indulge in" → "do" or cut
+  - "thrilling" → cut or "fun"
+  - Any phrase ending in "...await" or "...awaits" → rewrite as plain statement
+
+  If ANY of these cliches appear in your output, you have failed. Reread your output and replace them.
 
 ${move4}
 

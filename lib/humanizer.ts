@@ -1348,34 +1348,53 @@ async function humanizeChainChunked(
   const chunks = chunkLongInput(trimmed);
   console.log(`[chunked] split ${originalWordCount} words into ${chunks.length} chunks`);
 
-  // Run all chunks through the chain concurrently. Each chunk gets its own
-  // chain deadline scaled to chunk size, so a 350-word chunk gets ~55s of
-  // budget — plenty for the 2-hop fallback rotation.
-  const chunkPromises = chunks.map((chunk) =>
-    humanizeChain(
-      chunk.text,
-      contentMode,
-      referenceStyle,
-      modelPreset,
-      apiKey,
-      preset,
-      chunk.text.split(/\s+/).filter(Boolean).length
-    ).then(
-      (result) => ({ ok: true as const, result, separator: chunk.separator }),
-      // If a chunk fails the chain (e.g. model unavailable at the tail end
-      // of the fallback rotation), preserve the ORIGINAL chunk text so the
-      // user at least gets their content back. Failure should be the
-      // exception, not the rule.
-      (err) => ({
+  // Critical: limit concurrency so chunks don't all hammer DeepSeek (the
+  // primary hop-2 model) simultaneously. When 5+ chunks hit DeepSeek at
+  // once, most fall back to Gemini/Qwen — which are MORE polished and
+  // don't follow the degradation script aggressively. Output quality
+  // collapses on aggregated tour content (validated 2026-05-12 on
+  // Thailand 5-day itinerary where parallel chunks all got Gemini/Qwen
+  // hop 2 and 25 AI Phrases survived).
+  //
+  // CONCURRENCY = 2: at most 2 chunks compete for DeepSeek hop 2 at any
+  // time. Allows parallelism for hop 1 (faster, less queue pressure)
+  // while preserving DeepSeek availability for the critical degradation
+  // hop 2.
+  const CHUNK_CONCURRENCY = 2;
+
+  async function runChunk(chunk: InputChunk) {
+    try {
+      const result = await humanizeChain(
+        chunk.text,
+        contentMode,
+        referenceStyle,
+        modelPreset,
+        apiKey,
+        preset,
+        chunk.text.split(/\s+/).filter(Boolean).length
+      );
+      return { ok: true as const, result, separator: chunk.separator };
+    } catch (err) {
+      // Chunk failed (e.g. all hop-2 fallbacks exhausted). Preserve the
+      // ORIGINAL chunk text so the user still gets their content back.
+      return {
         ok: false as const,
         error: err,
         fallbackText: chunk.text,
         separator: chunk.separator,
-      })
-    )
-  );
+      };
+    }
+  }
 
-  const results = await Promise.all(chunkPromises);
+  // Process chunks in batches of CHUNK_CONCURRENCY. Within each batch,
+  // chunks run in parallel. Batches run sequentially. This keeps DeepSeek
+  // queue depth at <=2 while still using parallelism.
+  const results: Array<Awaited<ReturnType<typeof runChunk>>> = [];
+  for (let i = 0; i < chunks.length; i += CHUNK_CONCURRENCY) {
+    const batch = chunks.slice(i, i + CHUNK_CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(runChunk));
+    results.push(...batchResults);
+  }
 
   // Stitch the outputs back together using each chunk's original separator.
   let stitched = "";
