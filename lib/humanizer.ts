@@ -38,16 +38,20 @@ const PRESET_MODELS: Record<
   chain: {
     // Llama first: fast (no reasoning step), good structural rewriter.
     // DeepSeek second: different fingerprint family, handles hop 2 refine well.
-    // Fallbacks for hop 2: when DeepSeek times out, we MUST still get a
-    // second hop from a different-fingerprint model — single-hop output
-    // gets flagged 100% AI by Copyleaks. Qwen and Mistral are different
-    // families from Llama. Order matters: paid + fast first.
+    // Expanded hop-2 fallback pool 2026-05-13: 8 models across 7 families
+    // to guarantee hop 2 ALWAYS completes. Single-hop output is no longer
+    // an acceptable outcome — see humanizeChain for the retry-and-throw
+    // logic that enforces 2-hop as the only valid result.
     rewriteModel: "meta-llama/llama-3.3-70b-instruct",
     refineModel: "deepseek/deepseek-v4-flash",
     fallbackModels: [
       "qwen/qwen-2.5-72b-instruct",
       "google/gemini-2.5-flash",
+      "anthropic/claude-3.5-haiku",
+      "openai/gpt-4o-mini",
+      "deepseek/deepseek-chat-v3.1",
       "mistralai/mistral-large-2411",
+      "cohere/command-r-08-2024",
     ],
     // Higher temperature = higher perplexity = harder for detectors.
     temperatures: [1.05],
@@ -62,7 +66,11 @@ const PRESET_MODELS: Record<
     fallbackModels: [
       "qwen/qwen-2.5-72b-instruct",
       "google/gemini-2.5-flash",
+      "anthropic/claude-3.5-haiku",
+      "openai/gpt-4o-mini",
+      "deepseek/deepseek-chat-v3.1",
       "mistralai/mistral-large-2411",
+      "cohere/command-r-08-2024",
     ],
     temperatures: [1.05],
     label: "Chain Strict (no fact loss)",
@@ -1469,14 +1477,16 @@ async function humanizeChain(
   originalWordCount: number
 ): Promise<HumanizeResult> {
   const chainStart = Date.now();
-  // Chain deadline scales with input length. Base 45s for single-chunk
-  // inputs, +3s per 100 words. Capped at 270s (leaves 30s for response
-  // assembly under the route's 280s timeout, which itself sits under
-  // Vercel's 300s function limit).
+  // Chain deadline scales with input length. Base 60s for single-chunk
+  // inputs, +4s per 100 words. Capped at 290s (leaves 10s for response
+  // assembly under the route's 300s timeout, which is also Vercel's
+  // function ceiling). Bumped 2026-05-13 to give hop 2 enough budget for
+  // up to 3 retry rotations across 8 fallback models — 2-hop is now
+  // mandatory and we'd rather wait than ship 1-hop output.
   const inputWordCount = trimmed.split(/\s+/).filter(Boolean).length;
   const scaledBudget = Math.min(
-    45_000 + Math.ceil(inputWordCount / 100) * 3_000,
-    270_000
+    60_000 + Math.ceil(inputWordCount / 100) * 4_000,
+    290_000
   );
   const chainDeadline = chainStart + scaledBudget;
   const hopTimeout = preset.hopTimeoutMs ?? 25_000;
@@ -1532,31 +1542,60 @@ async function humanizeChain(
   }
 
   // ── Hop 2: refine with a different model ───────────────────────────
-  let finalOutput = hop1Output;
-  let finalQuality = scoreQuality(trimmed, hop1Output);
-  let usedModels = hop1Model;
-  let hopCount = 1;
-  let chainStatus = "1 hop only";
+  // ── Hop 2: MANDATORY for chain modes ─────────────────────────────────
+  // User directive 2026-05-13: "do 2 hop default for any request"
+  // Single-hop output is detectable (Llama fingerprint preserved). Two-hop
+  // through different model families is the whole reason the chain works.
+  //
+  // Strategy: retry the FULL hop-2 rotation up to 3 times, with backoff
+  // between rotations to let upstream rate limits clear. If after 3 full
+  // rotations across 8 models hop 2 still fails, throw — the request
+  // returns an error rather than degraded 1-hop output. This is the
+  // correct behavior: better to fail loudly than ship a polished AI
+  // result that the user will then complain about.
+  if (!preset.refineModel) {
+    throw new Error(
+      "Chain preset misconfigured: refineModel missing. Cannot guarantee 2-hop output."
+    );
+  }
 
-  if (preset.refineModel && chainDeadline - Date.now() > 8000) {
+  // Hop 2 strategy diverges by mode:
+  // - Standard: degradation script at +0.10 temp to disrupt smooth prose
+  // - Strict: vocab-swap prompt at low temp for word-level substitution
+  const hop2Temp = isStrictMode
+    ? 0.4
+    : Math.min(preset.temperatures[0] + 0.1, 1.3);
+  const hop2Prompt = isStrictMode
+    ? buildVocabularySwapPrompt({ text: hop1Output, contentMode })
+    : buildChainHop2Prompt({ text: hop1Output, contentMode });
+
+  // Per-model timeout: 15s. With 8 candidate models, one rotation =
+  // worst-case 8 * 15s = 120s. We allow 3 rotations within the chain
+  // deadline (270s), with 5s backoff between rotations.
+  const hop2PerModelTimeout = 15000;
+  const HOP2_MAX_ROTATIONS = 3;
+  const HOP2_ROTATION_BACKOFF_MS = 5000;
+
+  let hop2Result: { text: string; usedModel: string } | null = null;
+  let lastHop2Error: unknown = null;
+
+  for (let rotation = 0; rotation < HOP2_MAX_ROTATIONS; rotation++) {
+    const remaining = chainDeadline - Date.now();
+    if (remaining < 12000) {
+      // Not enough time for a useful attempt; stop trying.
+      break;
+    }
+    if (rotation > 0) {
+      console.log(
+        `[chain] hop 2 rotation ${rotation + 1}/${HOP2_MAX_ROTATIONS} — waiting ${HOP2_ROTATION_BACKOFF_MS}ms for rate limits...`
+      );
+      await new Promise((r) => setTimeout(r, HOP2_ROTATION_BACKOFF_MS));
+    }
     try {
-      // Hop 2 strategy diverges by mode:
-      // - Standard: degradation script at +0.10 temp to disrupt smooth prose
-      // - Strict: same vocab-swap prompt at low temp — second model catches
-      //   words the first missed, no structural changes
-      const hop2Temp = isStrictMode
-        ? 0.4
-        : Math.min(preset.temperatures[0] + 0.1, 1.3);
-      const hop2Prompt = isStrictMode
-        ? buildVocabularySwapPrompt({ text: hop1Output, contentMode })
-        : buildChainHop2Prompt({ text: hop1Output, contentMode });
-      // Use shorter per-model timeout for hop 2 so we can cycle through
-      // ALL fallback models within the chain deadline. Without this, one
-      // slow model exhausts the budget and we fall back to 1-hop output
-      // (which gets flagged 100% AI). No maxAttempts cap — let the
-      // deadline-budget logic decide when to stop.
-      const hop2PerModelTimeout = 15000;
-      const hop2 = await generateWithFallback({
+      console.log(
+        `[chain] hop 2 attempt — rotation ${rotation + 1}, budget: ${Math.round((chainDeadline - Date.now()) / 1000)}s, primary: ${preset.refineModel}`
+      );
+      hop2Result = await generateWithFallback({
         apiKey,
         prompt: hop2Prompt,
         primaryModel: preset.refineModel,
@@ -1566,79 +1605,54 @@ async function humanizeChain(
         timeoutMs: hop2PerModelTimeout,
         deadlineMs: chainDeadline,
       });
-      const hop2Output = clean(hop2.text);
-      const hop2Quality = scoreQuality(trimmed, hop2Output);
-
-      // For chain/stealth mode, ALWAYS prefer the 2-hop output for
-      // fingerprint mixing — that's the whole point of chaining through
-      // different model families. Only reject if hop 2 is catastrophically
-      // short or completely incoherent. The quality scorer penalizes the
-      // structural disruption we WANT, so quality-based rejection defeats
-      // the purpose.
-      const hop2WordCount = hop2Output.split(/\s+/).filter(Boolean).length;
-      const hop1WordCount = hop1Output.split(/\s+/).filter(Boolean).length;
-      const notTruncated = hop2WordCount >= hop1WordCount * 0.5;
-      if (hop2Output.length > 50 && notTruncated) {
-        finalOutput = hop2Output;
-        finalQuality = hop2Quality;
-        usedModels = `${hop1Model} → ${hop2.usedModel}`;
-        hopCount = 2;
-        chainStatus = "2 hops completed";
-      } else {
-        chainStatus = "hop 2 caused quality regression; using hop 1 output";
-      }
+      // Success — break out of retry loop
+      break;
     } catch (err) {
+      lastHop2Error = err;
       if (!isRecoverableModelError(err)) throw err;
-      chainStatus = "chain incomplete — refine model unavailable";
+      console.log(
+        `[chain] hop 2 rotation ${rotation + 1} exhausted all fallbacks; will retry if budget allows`
+      );
     }
   }
 
-  // ── Repair pass — DISABLED for chain mode ───────────────────────────
-  // The repair pass references the original text and pulls output back
-  // toward it, undoing the fingerprint mixing that makes chain mode work.
-  // Never repair chain output.
-  const shouldRepair = false;
-  if (shouldRepair) {
-    try {
-      const { text: raw } = await generateWithFallback({
-        apiKey,
-        prompt: buildSubstanceRepairPrompt({
-          original: trimmed,
-          rewritten: finalOutput,
-          contentMode,
-          referenceStyle,
-          genericPhrases: Array.from(
-            new Set(findGenericPhrases(finalOutput))
-          ),
-          unsupportedAdditions: finalQuality.unsupportedAdditions,
-        }),
-        primaryModel: preset.rewriteModel,
-        fallbackModels: preset.fallbackModels,
-        temperature: 0.62,
-        timeoutMs: 18000,
-        maxAttempts: 2,
-        deadlineMs: chainDeadline,
-      });
-      const repaired = clean(raw);
-      if (repaired) {
-        const rq = scoreQuality(trimmed, repaired);
-        const repairedBetter =
-          rankCandidate({ output: repaired, temperature: 0.62, quality: rq }) >
-          rankCandidate({
-            output: finalOutput,
-            temperature: preset.temperatures[0],
-            quality: finalQuality,
-          });
-        if (repairedBetter) {
-          finalOutput = repaired;
-          finalQuality = rq;
-          chainStatus += " + repair pass";
-        }
-      }
-    } catch {
-      // Repair failure is non-critical — keep chain output as-is
-    }
+  if (!hop2Result) {
+    // All rotations failed. NEVER return 1-hop output — throw so the user
+    // sees a clear error and can retry, rather than getting a result
+    // that silently won't beat AI detectors.
+    const detail =
+      lastHop2Error instanceof Error ? lastHop2Error.message : "unknown error";
+    throw new Error(
+      `Hop 2 failed after ${HOP2_MAX_ROTATIONS} rotations across all 8 fallback models. Detail: ${detail}. Single-hop output is not acceptable — please retry the request.`
+    );
   }
+
+  const hop2Output = clean(hop2Result.text);
+  const hop2Quality = scoreQuality(trimmed, hop2Output);
+
+  // Sanity check: hop 2 must not be catastrophically truncated. If it
+  // is, that means the model returned a bad response — also throw, do
+  // not silently degrade to hop 1.
+  const hop2WordCount = hop2Output.split(/\s+/).filter(Boolean).length;
+  const hop1WordCount = hop1Output.split(/\s+/).filter(Boolean).length;
+  const notTruncated = hop2WordCount >= hop1WordCount * 0.4;
+  if (hop2Output.length < 50 || !notTruncated) {
+    throw new Error(
+      `Hop 2 returned invalid output (${hop2WordCount} words vs ${hop1WordCount} expected). Single-hop output is not acceptable — please retry the request.`
+    );
+  }
+
+  const finalOutput = hop2Output;
+  const finalQuality = hop2Quality;
+  const usedModels = `${hop1Model} → ${hop2Result.usedModel}`;
+  const hopCount = 2;
+  const chainStatus = "2 hops completed (mandatory)";
+
+  // ── Repair pass REMOVED ─────────────────────────────────────────────
+  // The substance-repair pass referenced the original text and pulled
+  // output back toward it, undoing the fingerprint mixing that makes
+  // chain mode work. Removed entirely 2026-05-13 alongside the 2-hop
+  // mandatory commitment — no third pass on chain output, period.
 
   // ── Post-chain phrase cleanup DISABLED ────────────────────────────
   // Aggressive transition-stripping removed natural concession phrases

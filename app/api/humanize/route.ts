@@ -167,19 +167,18 @@ export async function POST(req: NextRequest) {
     };
 
     // Timeout scales with input length. Chunked processing means a 4000-word
-    // input runs ~12 chunks in parallel, each taking ~20-30s — total ~40s.
-    // A 200-word input is single-chunk, ~30s. Give 3x headroom for retries +
-    // model-fallback rotation, capped to Vercel's 300s function limit.
+    // input runs ~12 chunks in parallel (2 at a time), each taking ~30-50s
+    // (mandatory 2-hop with up to 3 retry rotations on hop 2).
     const inputWords = text.split(/\s+/).filter(Boolean).length;
     let timeoutMs: number;
     let timeoutMessage: string;
     if (resolvedPreset === "chain" || resolvedPreset === "chain-strict") {
-      // Base 45s + ~3s per 100 words of input. Capped at 280s (leaves 20s
-      // headroom under Vercel's 300s function limit for response packaging).
-      const scaled = Math.min(45_000 + Math.ceil(inputWords / 100) * 3_000, 280_000);
+      // Base 60s + ~4s per 100 words. Capped at 295s (Vercel function ceiling
+      // is 300s). 2-hop is mandatory now — need budget for retries.
+      const scaled = Math.min(60_000 + Math.ceil(inputWords / 100) * 4_000, 295_000);
       timeoutMs = scaled;
       timeoutMessage =
-        "Chain rewrite timed out. The input may be very long or model fallbacks may all be slow; try a shorter selection or retry in a moment.";
+        "Chain rewrite timed out. The input may be very long or all 8 fallback models were unavailable; please retry in a moment.";
     } else if (resolvedPreset === "minimax-deep") {
       timeoutMs = 55_000;
       timeoutMessage =
