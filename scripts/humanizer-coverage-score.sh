@@ -23,8 +23,10 @@ if [[ ! -f "$PROMPT_FILE" ]]; then
   exit 1
 fi
 
-# Count entries in kill lists — lines starting with "  - \"" inside the prompt template literal
-kill_entries=$(grep -cE '^\s+- "' "$PROMPT_FILE" || echo 0)
+# Count ALL technique bullet entries — lines starting with "  - " (quoted or descriptive)
+# inside the prompt template literal. Captures both old-style kill list entries
+# (`  - "thing" → "alt"`) and new ESL pattern entries (`  - Article omission: ...`)
+kill_entries=$(grep -cE '^\s+- [A-Z"]' "$PROMPT_FILE" || echo 0)
 
 # Count genre sections — uppercase section labels like "TRAVEL CLICHES:", "ACADEMIC:", etc.
 genre_sections=$(grep -cE '^\s+(UNIVERSAL|TRAVEL|ACADEMIC|EMOTIONAL|TECH|MARKETING|HYPE|BUSINESS|NEWS|RECIPE|TECHNICAL|CREATIVE|PRESS|BLOG|PRODUCT)' "$PROMPT_FILE" || echo 0)
