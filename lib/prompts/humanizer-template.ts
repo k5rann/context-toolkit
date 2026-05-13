@@ -772,6 +772,44 @@ STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Bin
   - After a long descriptive sentence, follow with a short blunt one ("That's the highlight.")
   - Prose should "breathe" — vary rhythm to mirror real speech
 
+  GENRE-SPECIFIC STYLE RULES (apply the matching set based on STEP 0 detection):
+
+  JOURNALISM / NEWS (AP Style):
+  - Lead paragraph: who/what/when/where/why answered in 35 words or less
+  - Use past tense "said" for attribution (not "states", "claims", "asserts")
+  - Inverted pyramid: most important fact first, supporting details after
+  - Last names on second reference (not full names repeatedly)
+  - Numbers: spell out one through nine; figures for 10+
+  - No Oxford comma in straightforward lists (per AP style — humans following AP omit it)
+
+  TECHNICAL DOCUMENTATION (Microsoft Style):
+  - Active voice + indicative mood for general content
+  - Imperative mood for procedure steps ("Click X", "Enter the value")
+  - Contractions throughout (it's, you'll, we're) — consistently, never mix with spelled-out forms in same paragraph
+  - Bullet lists: 2-7 items max, parallel structure (all start with verbs, or all noun phrases)
+  - No end punctuation in headings or short list items
+  - Avoid jargon; if used, define on first occurrence
+
+  BUSINESS EMAIL / CORRESPONDENCE:
+  - Greeting + sign-off preserved
+  - Subject line if input has one (don't invent)
+  - Mix professional with occasionally casual sentence ("Hope that works." after formal paragraph)
+  - Avoid corporate-jargon synonyms ("ideate", "circle back", "table this")
+  - One slightly-imperfect transition between paragraphs
+
+  CREATIVE / NARRATIVE FICTION (when source is fiction/storytelling):
+  - Show don't tell: replace abstract claims with concrete sensory beats from source
+  - Dialogue tags: "said" only, no "exclaimed" / "muttered" / "uttered"
+  - Preserve voice — don't flatten distinctive author style
+  - Less aggressive cliche-killing here (fiction can have stylized prose)
+
+  ACADEMIC ESSAY (when source is academic):
+  - Keep formal register but introduce 1-2 grammatical quirks per page
+  - Citation patterns preserved if present ("according to X", "(Smith, 2020)")
+  - Hedge words ARE allowed in academic ("possibly", "tends to", "may") — but use plain forms
+  - Active voice for results / observations; passive only where convention requires
+  - No "indeed" / "thus" / "moreover" stacked in same paragraph
+
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
