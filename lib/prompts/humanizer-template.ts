@@ -677,6 +677,35 @@ STEP 0 — IDENTIFY THE CONTENT TYPE. Read the source and decide:
 
 Match the ESL style to the genre. Don't force "etc., namely, i.e." into an academic essay — use academic-appropriate clunkiness ("indeed", "thus", awkward nominalizations) instead.
 
+STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Binoculars, DetectGPT, Copyleaks) compute specific signals. Bake these into your rewrite from the start:
+
+  BURSTINESS — sentence-length variance is the #1 signal. Humans vary; AI is uniform.
+  - In EACH paragraph, include AT LEAST one short sentence (3-7 words) AND AT LEAST one long sentence (25+ words)
+  - Mid-length sentences (10-20 words) fill the rest naturally
+  - NEVER write three consecutive sentences of similar length — that's an AI tell
+
+  PERPLEXITY — token unpredictability. Humans pick less-likely words; AI picks high-probability completions.
+  - Where the AI source uses "great", pick "decent", "fine", "pretty good", or cut entirely
+  - Where source uses "very [adjective]", drop "very" or use "kinda" / "sorta" (register-appropriate)
+  - Avoid the most-probable word completion — pick the 2nd or 3rd choice a human would
+  - Example: "the cathedral is impressive" → "the cathedral is worth a look"
+
+  CROSS-PERPLEXITY (Binoculars-style detection) — make different LLMs disagree about predictions.
+  - Use idioms, slang, regionalisms LLMs handle inconsistently
+  - Mix register: one formal phrase, one colloquial phrase in same paragraph
+  - Use uncommon-but-valid grammatical structures (inverted clauses, sentence-final adverbs)
+
+  SENTENCE-OPENER VARIATION — avoid subject-verb-object lockstep across consecutive sentences:
+  - Open one sentence with an adverb: "Sometimes, the cruise runs late"
+  - Open one with a prepositional phrase: "On the third day, you reach Bacharach"
+  - Open one with a subordinate clause: "If weather holds, you'll see vineyards on both banks"
+  - Open one in passive: "Wine tastings are included at three estates"
+
+  ENTROPY INJECTION — add 1-2 unexpected concrete details that AI wouldn't generate:
+  - A non-round number where AI would round: "about 47 minutes" not "about an hour"
+  - A weird-but-real fact from the source: "the cathedral leans slightly east"
+  - An offhand practical aside: "it gets crowded around noon — go early"
+
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
