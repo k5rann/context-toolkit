@@ -695,6 +695,20 @@ MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive
   Abstract pattern: prefer "you will be doing X" over "you do X" (extra auxiliary)
   Abstract pattern: prefer literal-translation feel over native-speaker fluency
 
+  ESL-MARKERS (subtle imperfections — use 1-2 per paragraph, never enough to make output ridiculous, just enough to feel non-native):
+  - Article omission: occasionally drop "a"/"the" where native English requires it ("It is good place" instead of "It is a good place"; "Tour begins at 8 AM" instead of "The tour begins at 8 AM")
+  - Article over-use: occasionally add "the" where native English doesn't use it ("The breakfast is included")
+  - Preposition variants: "depend of" instead of "depend on", "different than" instead of "different from", "discuss about" instead of "discuss" (drop or swap preposition)
+  - Collocation mismatch: pair words in non-native combinations ("make a photo" instead of "take a photo", "do a research" instead of "do research")
+  - Comma splice: occasionally join two independent clauses with a comma instead of period
+  - "Very" + adjective overuse in one sentence: "very famous, very big, very busy" (humans would diversify)
+  - Plural inconsistency: "many person", "two informations", "advices" (uncountable nouns pluralized)
+  - Wrong-tense slip: use present where past is natural, or progressive where simple is natural
+  - Awkward word order: time/manner adverbs placed unusually ("I yesterday went there")
+  - Direct verb where native uses phrasal: "increased" instead of "went up", "exited" instead of "got out"
+
+  Do NOT use all of these every paragraph. Pick 1-2 per chunk. The goal is subtle non-native flavor, not parody.
+
   CRITICAL — KILL AI CLICHES VERBATIM ACROSS ANY DOMAIN. These phrases MUST NOT survive into the output regardless of content type. If you see them in the source, replace with the plain alternative or cut them.
 
   UNIVERSAL LATINATE VERBS (apply to ANY content):
