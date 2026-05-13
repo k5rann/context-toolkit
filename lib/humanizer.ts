@@ -168,8 +168,50 @@ function stripPreamble(s: string): string {
     .replace(/^\s*(?:rewritten|revised|output|final)\s*\([^\n]*\)\s*:?\s*\n+/im, "");
 }
 
+/**
+ * Strip Unicode characters that AI models leak (em-dashes, curly quotes,
+ * zero-width spaces, narrow no-break spaces, etc.). These are flagged by
+ * detectors as AI signals — see e.g. Originality.ai's invisible-character
+ * detector. We normalize to ASCII equivalents.
+ *
+ * Rationale (2026-05-13 research): GPT-o3/o4-mini leak U+202F; Claude/GPT-4
+ * overuse U+2014 em-dashes; curly quotes (U+2018, U+2019, U+201C, U+201D)
+ * are statistical AI tells when used in casual content.
+ */
+function sanitizeUnicode(text: string): string {
+  return text
+    // Em-dash → " - " (single space-hyphen-space). One em-dash MIGHT
+    // be left (the prompt allows max 1), but we still convert ALL of
+    // them to ASCII because em-dash overuse is the bigger risk.
+    .replace(/—/g, " - ")
+    // En-dash → "-"
+    .replace(/–/g, "-")
+    // Curly single quotes → '
+    .replace(/[‘’]/g, "'")
+    // Curly double quotes → "
+    .replace(/[“”]/g, '"')
+    // Unicode ellipsis → "..."
+    .replace(/…/g, "...")
+    // Non-breaking space → regular space
+    .replace(/ /g, " ")
+    // Narrow no-break space (GPT-o3/o4-mini leak this) → regular space
+    .replace(/ /g, " ")
+    // Zero-width space → remove entirely
+    .replace(/​/g, "")
+    // Zero-width non-joiner → remove
+    .replace(/‌/g, "")
+    // Zero-width joiner → remove
+    .replace(/‍/g, "")
+    // Word joiner → remove
+    .replace(/⁠/g, "")
+    // Byte order mark → remove
+    .replace(/﻿/g, "")
+    // Collapse multiple spaces created by replacements
+    .replace(/ {2,}/g, " ");
+}
+
 function clean(raw: string): string {
-  return stripWrappingQuotes(stripPreamble(raw)).trim();
+  return sanitizeUnicode(stripWrappingQuotes(stripPreamble(raw))).trim();
 }
 
 // ── Level 1 banned vocabulary (12-level human writing framework) ─────

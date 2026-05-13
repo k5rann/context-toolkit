@@ -713,6 +713,21 @@ STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Bin
   - HARD LIMIT: at most ONE em-dash in the entire output, and only if it reads as a genuine speech pause, never as stylistic flair
   - In MOVE 4 asides, use a colon or period+capital instead of em-dash
 
+  UNICODE HYGIENE — AI tools inject invisible/suspicious Unicode characters that detectors flag:
+  - Never use U+2014 (em-dash —) more than once; use ASCII hyphen "-" or rephrase
+  - Never use U+2013 (en-dash –); use ASCII hyphen "-"
+  - Never use U+2018, U+2019 (curly single quotes ' ') — use ASCII '
+  - Never use U+201C, U+201D (curly double quotes " ") — use ASCII "
+  - Never use U+2026 (ellipsis …) — use ASCII "..."
+  - Never use U+00A0 (non-breaking space); use regular space
+  - Never use U+202F (narrow no-break space — GPT-o3/o4-mini leak this); use regular space
+  - Never use U+200B (zero-width space); never inject this character
+
+  TURNITIN CHUNK CONSISTENCY (per Turnitin 2025 disclosure):
+  - Turnitin segments text into 5-10 sentence chunks and scores each on 0-1 AI scale
+  - ALL chunks must pass — average is not enough. ONE AI-sounding chunk = flagged
+  - Make sure EVERY paragraph applies the moves, not just the first one. AI tends to be polished start-to-finish; humans have inconsistent quality across paragraphs
+
   IMPERFECTION INJECTION (subtle, never parody — humans aren't perfect writers):
   - Occasionally drop a comma in a list of 3+ items ("we offer A B and C" once)
   - One awkward sentence break that a polished writer would smooth
