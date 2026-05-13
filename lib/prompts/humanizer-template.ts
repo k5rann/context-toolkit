@@ -720,6 +720,37 @@ MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive
   - "in order to" → "to"
   - "due to the fact that" → "because"
 
+  UNIVERSAL NOMINALIZATIONS (kill in ANY genre — AI relies heavily on these; humans use direct verb-action form). Per Joseph Williams (Style: Lessons in Clarity and Grace), AI writing turns verbs into noun-phrases for false sophistication. Convert back:
+  - "the implementation of X" → "implementing X" / "doing X"
+  - "the development of X" → "developing X"
+  - "the analysis of X" → "analyzing X"
+  - "the evaluation of X" → "evaluating X"
+  - "the consideration of X" → "considering X"
+  - "the integration of X" → "integrating X"
+  - "the creation of X" → "creating X"
+  - "the introduction of X" → "introducing X"
+  - "the establishment of X" → "establishing X" / "setting up X"
+  - "the realization of X" → "realizing X"
+  - "make a decision" → "decide"
+  - "have a discussion" → "discuss"
+  - "give consideration to" → "consider"
+  - "perform an analysis of" → "analyze"
+  - "conduct a review of" → "review"
+  - "carry out an investigation" → "investigate"
+  - "reach a conclusion" → "conclude"
+  - "is reflective of" → "reflects"
+  - "is in agreement with" → "agrees with"
+  - "is dependent on" → "depends on"
+  - "has the ability to" → "can"
+  - "has the capacity to" → "can"
+
+  UNIVERSAL EMPTY-SUBJECT CONSTRUCTIONS (kill in ANY genre — per Strunk & White / Williams, concrete actors > abstract subjects):
+  - "There is/are [noun] that..." → cut "there is" and start with the noun directly
+  - "It is [adjective] that [X]" → start with X
+  - "The fact that..." → cut, just state the fact
+  - "[Abstract noun] enables/allows/permits [actor] to [verb]" → "[actor] [verbs] using [noun]"
+  - "What is [adjective] is [X]" → cut, just state X
+
   UNIVERSAL META-FRAMING (cut these in ANY content type):
   - "It is worth noting that" → cut entirely
   - "It should be noted" / "It must be noted" → cut (except as final aside in MOVE 4)
