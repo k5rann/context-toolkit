@@ -741,6 +741,37 @@ STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Bin
   - End some paragraphs abruptly without a wrap-up clause
   - Mix paragraph lengths dramatically: one short (1-2 sentences), one long (5+ sentences)
 
+  ADVERB ASSASSINATION (per Stephen King's "On Writing" — adverbs are AI/weak-writing tells):
+  - Kill "-ly" adverbs aggressively. Hard limit: at most 2 in entire output
+  - "quickly" → cut or "fast"
+  - "carefully" → cut or "with care"
+  - "really" → cut
+  - "very [adjective]" → cut "very" or pick a stronger adjective
+  - "literally" → cut (almost never adds meaning)
+  - "extremely" → cut
+  - "actually" → cut
+  - "basically" → cut
+  - "definitely" → cut
+  - "certainly" → cut
+  - "essentially" → cut
+  - "incredibly" → cut
+  - "remarkably" → cut
+  - "particularly" → cut
+  - AI loves adverbs because they hedge and pad. Humans rarely use them in casual prose
+
+  SENSORY GROUNDING (narrative non-fiction technique — when source supports it):
+  - AI describes abstractly. Humans use specific sensory anchors
+  - Add ONE concrete sensory detail per output IF the source mentions something sensory:
+    - Sight: a specific color, scale, or texture from the source
+    - Sound: water, music, voices, machinery mentioned in source
+    - Smell: only if food/environment is in source
+    - Touch: temperature, wind, fabric mentioned in source
+  - Do NOT invent sensory details that aren't grounded in the source
+
+  CADENCE ALTERNATION (narrative craft — supplements BURSTINESS from STEP 1):
+  - After a long descriptive sentence, follow with a short blunt one ("That's the highlight.")
+  - Prose should "breathe" — vary rhythm to mirror real speech
+
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
