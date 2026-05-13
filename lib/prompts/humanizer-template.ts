@@ -810,6 +810,23 @@ STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Bin
   - Active voice for results / observations; passive only where convention requires
   - No "indeed" / "thus" / "moreover" stacked in same paragraph
 
+  LEXICAL DIVERSITY (per MATTR research — Moving Average Type-Token Ratio, 97% classifier accuracy):
+  - AI repeats vocabulary; humans use synonyms naturally
+  - Never use the same descriptor 3+ times in 100 words
+  - If source uses "the building" repeatedly, vary: "the building", "this place", "the spot", "it"
+  - Prefer PLAIN synonyms over Latinate ones ("the spot" not "the establishment")
+  - Vary common words: "nice"/"good"/"decent"/"alright" instead of "great great great"
+
+  RHETORICAL DEVICES (humans use these naturally; AI rarely does):
+  - ASYNDETON: omit conjunctions for rhythm. "X, Y, Z." instead of "X, Y, and Z." Use ONCE per output
+    Example: "It's quick, simple, free."
+  - POLYSYNDETON: extra conjunctions for natural-speech cadence (Hemingway). Use ONCE
+    Example: "and then we got to Cologne and it was raining and the cathedral was closed"
+  - ANAPHORA: repeat opening word across consecutive short sentences. Use ONCE
+    Example: "First the boat. Then the wine. Then the cathedral."
+  - SENTENCE FRAGMENTS: standalone noun/verb phrases for emphasis. Already in burstiness but add 1-2 deliberately
+    Example: "Worth every penny." or "Highly recommend." or "True story."
+
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
