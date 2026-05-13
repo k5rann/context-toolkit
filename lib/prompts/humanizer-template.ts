@@ -643,10 +643,11 @@ export function buildChainHop2Prompt({
   const move4 = strictFacts
     ? `MOVE 4 — Do NOT add a tangential aside or "It must be noted" sentence. Strict facts mode means: every factual claim must come from the source. But MOVES 2, 3, 5, 6, 7 still apply at full strength — rephrase aggressively, just don't drop or add facts.`
     : `MOVE 4 — Add 1 tangential sentence near the end as an aside. Something a writer would tack on as an afterthought, drawn from a real detail in the source text — NOT a generic logistics note. Pick a specific minor detail from the source and make it the aside.
-  Style examples (DON'T copy these verbatim — make up your own from the actual source):
+  Style examples (DON'T copy these verbatim — make up your own from the actual source). NEVER use em-dashes here; em-dashes are an AI tell (see EM-DASH KILL below):
   - "It must be noted that X is also included."
   - "Note: Y is optional but recommended."
-  - "Worth mentioning — Z is available on request."`;
+  - "Worth mentioning: Z is available on request." (colon, not em-dash)
+  - "By the way, A also applies." (sentence-fragment opener instead of em-dash)`;
 
   // UNIVERSAL HOP 2 — works for any content domain. The previous prompt was
   // overfit to travel marketing copy ("Dubai tour agency" persona, travel-
@@ -704,7 +705,26 @@ STEP 1 — TARGET THE DETECTOR'S STATISTICAL SIGNALS. AI detectors (GPTZero, Bin
   ENTROPY INJECTION — add 1-2 unexpected concrete details that AI wouldn't generate:
   - A non-round number where AI would round: "about 47 minutes" not "about an hour"
   - A weird-but-real fact from the source: "the cathedral leans slightly east"
-  - An offhand practical aside: "it gets crowded around noon — go early"
+  - An offhand practical aside: "it gets crowded around noon, go early"
+
+  EM-DASH KILL — em dashes (— or --) are a MAJOR AI tell. GPT-4 and Claude overuse them; humans rarely use them in casual writing. Commercial humanizers (StealthGPT, Undetectable.ai) strip them out. Apply the same:
+  - Convert ALL em-dashes to: period + capital letter, comma, parenthesis, or rephrase
+  - Examples: "X — Y" → "X. Y." OR "X, Y" OR "X (Y)" OR rewrite
+  - HARD LIMIT: at most ONE em-dash in the entire output, and only if it reads as a genuine speech pause, never as stylistic flair
+  - In MOVE 4 asides, use a colon or period+capital instead of em-dash
+
+  IMPERFECTION INJECTION (subtle, never parody — humans aren't perfect writers):
+  - Occasionally drop a comma in a list of 3+ items ("we offer A B and C" once)
+  - One awkward sentence break that a polished writer would smooth
+  - Reuse the same descriptor twice in nearby sentences (humans repeat; AI varies)
+  - One slightly-wrong preposition or article every several paragraphs
+  - One run-on sentence or comma splice per output (max one)
+
+  STRUCTURAL UNPREDICTABILITY (per StealthGPT bypass research):
+  - Never write 3 consecutive sentences with the same opening pattern (e.g. all starting with subject pronoun)
+  - Introduce one mid-paragraph topic shift WITHOUT a transition word
+  - End some paragraphs abruptly without a wrap-up clause
+  - Mix paragraph lengths dramatically: one short (1-2 sentences), one long (5+ sentences)
 
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
