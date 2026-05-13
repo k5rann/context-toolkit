@@ -568,12 +568,15 @@ export function buildChainHop1Prompt({
 
   // Keep the generative prompt SHORT and natural. Over-instructing produces
   // mechanical output (the framework's own Level 10 over-correction warning).
-  // The banned phrase list is enforced in post-processing, not here.
+  // The banned phrase list is enforced in post-processing (hop 2).
   // VALIDATED: this prompt produces 0% AI on Copyleaks when paired with
-  // a 2-hop chain (Llama -> DeepSeek). Don't add directives without retest.
-  return `Rewrite this ${wc}-word text as a fresh draft. Not a paraphrase. ${minWords}-${maxWords} words. Keep every fact and name.
+  // hop 2. Don't add directives without retest.
+  //
+  // Universal — works for any content genre. Hop 1's job is structural
+  // restructure + argument reordering. The DEGRADATION happens in hop 2.
+  return `Rewrite this ${wc}-word text as a fresh draft in the same genre as the source. Not a paraphrase. ${minWords}-${maxWords} words. Keep every fact, name, and number.
 
-Lead with the most interesting point, not the original's opening. Use contractions. Mix long sentences with short ones. Don't open with "X has transformed..." — start in the middle. End when the point lands, no wrap-up.
+Lead with the most interesting point, not the original's opening. Reorder facts where it makes sense. Mix long sentences with short ones. Use contractions where the genre allows (avoid in formal academic / legal / press release). Don't open with "X has transformed..." or "In recent years..." — start in the middle. End on the strongest point, no wrap-up paragraph.
 
 ${MODE_GUIDANCE[contentMode]}
 
@@ -645,28 +648,99 @@ export function buildChainHop2Prompt({
   - "Note: Y is optional but recommended."
   - "Worth mentioning — Z is available on request."`;
 
-  // Examples use abstract placeholders so the model doesn't verbatim-copy
-  // content from the examples into outputs (a real bug observed 2026-05-11
-  // when Dubai/Bedouin example phrases leaked into a Thailand itinerary).
-  return `Rewrite the TEXT below as a non-native English copywriter would: real, slightly clunky, lossy human writing. NOT polished marketing prose. ${targetMin}-${targetMax} words. Keep proper nouns, prices, durations, and place names from the source.${strictFacts ? "\n\n>> STRICT FACTS MODE: do not drop or alter any factual content from the source. Reshape the prose only — but still apply MOVES 2, 3, 5, 6, 7 aggressively." : ""}
+  // UNIVERSAL HOP 2 — works for any content domain. The previous prompt was
+  // overfit to travel marketing copy ("Dubai tour agency" persona, travel-
+  // specific examples). Refactored 2026-05-13 to apply universal AI patterns
+  // first, then layer domain-specific reinforcements that activate only
+  // when the content matches.
+  //
+  // The model adapts to the source: a recipe gets recipe-flavored ESL,
+  // an academic essay gets academic-flavored clunkiness, a business email
+  // gets professional-imperfect phrasing, a tour page gets travel ESL.
+  // All share the universal patterns below.
+  return `Rewrite the TEXT below as a non-native English writer would draft it: real, slightly clunky, lossy human writing in whatever genre the source represents. NOT polished prose. ${targetMin}-${targetMax} words. Keep all facts, names, numbers, dates, and proper nouns from the source.${strictFacts ? "\n\n>> STRICT FACTS MODE: do not drop or alter any factual content from the source. Reshape the prose only — but still apply MOVES 2, 3, 5, 6, 7 aggressively." : ""}
 
 DO NOT copy any phrasing from the examples below — they are abstract patterns, not content to use. Generate fresh phrasing from the actual source.
+
+STEP 0 — IDENTIFY THE CONTENT TYPE. Read the source and decide:
+- Tour/travel marketing → ESL connectors freely (etc., namely, i.e.)
+- Academic essay or paper → keep some formality but introduce grammar hiccups
+- Business email or correspondence → professional but awkward word choices
+- Technical documentation / how-to → dry, specific, simpler verbs
+- News article / journalism → factual, neutral tone, mild ESL constructions
+- Blog post / opinion piece → conversational with imperfect transitions
+- Product description / e-commerce → factual list-like phrasing
+- Recipe / instructions → imperative, short, simple
+- Creative writing → preserve voice, light touch, don't over-degrade
+- Press release → factual, slightly stiff, less marketing-y
+- Default for unknown types → plain-spoken English with mild ESL flavor
+
+Match the ESL style to the genre. Don't force "etc., namely, i.e." into an academic essay — use academic-appropriate clunkiness ("indeed", "thus", awkward nominalizations) instead.
 
 Follow ALL of these moves — they're the difference between polished AI output and real mediocre human writing:
 
 ${move1}
 
-MOVE 2 — Use these connectors that AI never uses in prose: "namely", "etc.", "i.e.", "for example,", "in addition,". Sprinkle 1-2 of them naturally where lists or details appear in the source.
-  Abstract pattern: "[list of things from source], etc."
-  Abstract pattern: "[main thing], namely [details from source]."
+MOVE 2 — Use ESL connectors and disfluencies appropriate to the content type:
+  - Travel/casual/marketing: "namely", "etc.", "i.e.", "for example,", "in addition,"
+  - Academic/essay: "thus", "indeed", "in particular", "by contrast" (used clunkily)
+  - Technical: numbered steps with imperfect parallel structure, "such as", "including"
+  - Business/email: "additionally" (sparingly), "as a result", "with regard to"
+  - News/journalism: "according to", "moreover" (used awkwardly), simple lists
+  - Recipe/instructions: short imperatives, occasional missing articles
+  Sprinkle 1-2 naturally where the genre allows. Don't force them.
 
-MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive voice is fine. ESL-sounding constructions are fine.
-  Abstract pattern: prefer "[thing] is provided to guests" over "guests enjoy [thing]"
-  Abstract pattern: prefer "you will be going to [place]" over "you visit [place]"
+MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive voice is fine. ESL-sounding constructions are fine. Awkward word order is fine.
+  Abstract pattern: prefer passive "[thing] is provided to [audience]" over active "[audience] enjoys [thing]"
+  Abstract pattern: prefer "you will be doing X" over "you do X" (extra auxiliary)
+  Abstract pattern: prefer literal-translation feel over native-speaker fluency
 
-  CRITICAL — KILL AI CLICHES VERBATIM. These phrases MUST NOT survive into the output. If you see them in the source, replace with the plain alternative or cut them.
+  CRITICAL — KILL AI CLICHES VERBATIM ACROSS ANY DOMAIN. These phrases MUST NOT survive into the output regardless of content type. If you see them in the source, replace with the plain alternative or cut them.
 
-  TRAVEL CLICHES:
+  UNIVERSAL LATINATE VERBS (apply to ANY content):
+  - "utilize" / "utilization" → "use"
+  - "facilitate" → "help" / "make easier"
+  - "demonstrate" → "show"
+  - "ensure" / "ensures" → "make sure"
+  - "implement" / "implementation" → "do" / "set up"
+  - "leverage" → "use"
+  - "encompass" / "encompasses" → "cover" / "include"
+  - "transcend" → "go beyond"
+  - "illuminate" → "show" / "light up"
+  - "demonstrate" → "show"
+  - "constitute" / "constitutes" → "is" / "make up"
+  - "comprise" / "comprised of" → "include" / "made up of"
+  - "ascertain" → "find out"
+  - "endeavor" → "try"
+  - "facilitate" → "help"
+  - "commence" → "start"
+  - "terminate" → "end"
+  - "subsequent" / "subsequently" → "later" / "after"
+  - "prior to" → "before"
+  - "in order to" → "to"
+  - "due to the fact that" → "because"
+
+  UNIVERSAL META-FRAMING (cut these in ANY content type):
+  - "It is worth noting that" → cut entirely
+  - "It should be noted" / "It must be noted" → cut (except as final aside in MOVE 4)
+  - "It is important to mention" → cut
+  - "In this paper" / "this article" / "this post" → cut or rephrase plainly
+  - "X represents Y" → "X is Y"
+  - "X exemplifies Y" → "X is Y"
+  - "X is a testament to Y" → cut entirely
+  - "X serves as Y" → "X is Y"
+  - "In conclusion" / "To conclude" / "To summarize" → cut
+  - "Overall" (as paragraph opener) → cut
+
+  UNIVERSAL HEDGE STACKS (collapse to single word):
+  - "could potentially" → "could" or "might"
+  - "may possibly" → "might"
+  - "is generally considered to be" → "is"
+  - "tends to be" → "is"
+  - "in many cases" → cut or "often"
+  - "a variety of" / "a wide range of" → "many" or specific count
+
+  TRAVEL/TOUR CLICHES (apply only if travel content):
   - "majestic [animal]" → just "[animal]" or "big [animal]"
   - "dazzling [show/performance]" → cut "dazzling" or replace with "the [show]"
   - "sun-kissed shores" / "sunny shores" → "beaches" or "the coast"
@@ -722,9 +796,16 @@ MOVE 3 — Keep some clunky/awkward phrasings instead of smoothing them. Passive
 
   PATTERN — "X is a wonder" / "X exemplifies Y" / "X represents Z": cut the meta-framing. Just describe what X is plainly.
 
-  If ANY 2-word AI marketing phrase appears in your output (whether listed here or not), you have failed. Reread your output and ask: does this sound like a brochure or a tour-operator landing page? If yes, plain-ify it.
+  If ANY 2-word AI cliche appears in your output (whether listed here or not), you have failed. Reread your output and ask the GENRE-APPROPRIATE self-check:
+  - Travel content: "Does this sound like a brochure or tour-operator landing page?"
+  - Academic content: "Does this sound like an AI-polished journal article?"
+  - Business content: "Does this sound like AI-generated corporate copy?"
+  - Technical content: "Does this sound like AI-generated documentation?"
+  - News/blog content: "Does this sound like AI-generated article fluff?"
+  - Any other genre: "Does this sound too clean and polished for the genre?"
+  If yes to any of these, plain-ify it.
 
-  CRITICAL: words like "captivate", "captivating", "captivated", "captivates" are ALL the same banned cliche in different grammatical forms. Killing the adjective ("captivating") but keeping the verb ("captivate") doesn't help — the AI signal is identical. Apply the kill rule across ALL inflections of every entry above. Same applies to "thrill" / "thrilling" / "thrilled", "mesmerize" / "mesmerizing" / "mesmerized", "enchant" / "enchanting" / "enchanted", and so on.
+  CRITICAL: words like "captivate", "captivating", "captivated", "captivates" are ALL the same banned cliche in different grammatical forms. Killing the adjective ("captivating") but keeping the verb ("captivate") doesn't help — the AI signal is identical. Apply the kill rule across ALL inflections of every entry above. Same applies to "thrill" / "thrilling" / "thrilled", "mesmerize" / "mesmerizing" / "mesmerized", "enchant" / "enchanting" / "enchanted", "demonstrate" / "demonstrates" / "demonstrating" / "demonstrated", and so on.
 
 ${move4}
 
