@@ -1,0 +1,773 @@
+[
+  {
+    "id": "corpus-01-academic-essay",
+    "source": "ai-test-corpus",
+    "inputWordCount": 167,
+    "chain": {
+      "ms": 28379,
+      "ok": true,
+      "quality": {
+        "readability": 100,
+        "repetition": 86,
+        "genericPhrasing": 56,
+        "sentenceVariety": 83,
+        "specificity": 69,
+        "meaningRetention": 18,
+        "lengthFit": 46,
+        "structureFit": 90,
+        "overall": 65,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 126,
+      "lenRetention": 0.754,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.341,
+      "burstinessMean": 18,
+      "remainingSwaps": 2,
+      "mattr": 0.93
+    },
+    "stealth": {
+      "ms": 16792,
+      "ok": true,
+      "quality": {
+        "readability": 100,
+        "repetition": 92,
+        "genericPhrasing": 100,
+        "sentenceVariety": 94,
+        "specificity": 74,
+        "meaningRetention": 31,
+        "lengthFit": 72,
+        "structureFit": 91,
+        "overall": 80,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 146,
+      "lenRetention": 0.874,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.391,
+      "burstinessMean": 18.25,
+      "remainingSwaps": 0,
+      "mattr": 0.916
+    }
+  },
+  {
+    "id": "corpus-02-business-copy",
+    "source": "ai-test-corpus",
+    "inputWordCount": 148,
+    "chain": {
+      "ms": 36981,
+      "ok": true,
+      "quality": {
+        "readability": 91,
+        "repetition": 98,
+        "genericPhrasing": 0,
+        "sentenceVariety": 75,
+        "specificity": 82,
+        "meaningRetention": 9,
+        "lengthFit": 18,
+        "structureFit": 81,
+        "overall": 51,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 93,
+      "lenRetention": 0.628,
+      "triggerHits": 2,
+      "triggerDensity": 21.51,
+      "triggerTopHits": {
+        "streamline": 1,
+        "transformative": 1
+      },
+      "burstinessCV": 0.187,
+      "burstinessMean": 13.29,
+      "remainingSwaps": 3,
+      "mattr": 0.963
+    },
+    "stealth": {
+      "ms": 13648,
+      "ok": true,
+      "quality": {
+        "readability": 91,
+        "repetition": 73,
+        "genericPhrasing": 100,
+        "sentenceVariety": 88,
+        "specificity": 80,
+        "meaningRetention": 31,
+        "lengthFit": 88,
+        "structureFit": 73,
+        "overall": 77,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite changed the source structure too much.",
+          "Some repeated wording or sentence starts remain.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 156,
+      "lenRetention": 1.054,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.553,
+      "burstinessMean": 17.33,
+      "remainingSwaps": 1,
+      "mattr": 0.859
+    }
+  },
+  {
+    "id": "corpus-03-tech-explainer",
+    "source": "ai-test-corpus",
+    "inputWordCount": 173,
+    "chain": {
+      "ms": 28481,
+      "ok": true,
+      "quality": {
+        "readability": 95,
+        "repetition": 94,
+        "genericPhrasing": 12,
+        "sentenceVariety": 78,
+        "specificity": 70,
+        "meaningRetention": 9,
+        "lengthFit": 35,
+        "structureFit": 81,
+        "overall": 54,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears: malicious actors, AI-powered threats.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 122,
+      "lenRetention": 0.705,
+      "triggerHits": 1,
+      "triggerDensity": 8.2,
+      "triggerTopHits": {
+        "crucial": 1
+      },
+      "burstinessCV": 0.212,
+      "burstinessMean": 15.25,
+      "remainingSwaps": 1,
+      "mattr": 0.892
+    },
+    "stealth": {
+      "ms": 14105,
+      "ok": true,
+      "quality": {
+        "readability": 88,
+        "repetition": 83,
+        "genericPhrasing": 100,
+        "sentenceVariety": 79,
+        "specificity": 74,
+        "meaningRetention": 28,
+        "lengthFit": 78,
+        "structureFit": 45,
+        "overall": 73,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite changed the source structure too much.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 156,
+      "lenRetention": 0.902,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.406,
+      "burstinessMean": 12,
+      "remainingSwaps": 0,
+      "mattr": 0.915
+    }
+  },
+  {
+    "id": "corpus-04-casual-blog",
+    "source": "ai-test-corpus",
+    "inputWordCount": 163,
+    "chain": {
+      "ms": 33175,
+      "ok": true,
+      "quality": {
+        "readability": 94,
+        "repetition": 93,
+        "genericPhrasing": 78,
+        "sentenceVariety": 87,
+        "specificity": 72,
+        "meaningRetention": 39,
+        "lengthFit": 42,
+        "structureFit": 90,
+        "overall": 72,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 120,
+      "lenRetention": 0.736,
+      "triggerHits": 2,
+      "triggerDensity": 16.67,
+      "triggerTopHits": {
+        "crucial": 1,
+        "essential": 1
+      },
+      "burstinessCV": 0.353,
+      "burstinessMean": 14.88,
+      "remainingSwaps": 8,
+      "mattr": 0.864
+    },
+    "stealth": {
+      "ms": 18031,
+      "ok": true,
+      "quality": {
+        "readability": 84,
+        "repetition": 85,
+        "genericPhrasing": 78,
+        "sentenceVariety": 81,
+        "specificity": 74,
+        "meaningRetention": 23,
+        "lengthFit": 60,
+        "structureFit": 55,
+        "overall": 67,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "The rewrite changed the source structure too much.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 133,
+      "lenRetention": 0.816,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.522,
+      "burstinessMean": 10.23,
+      "remainingSwaps": 1,
+      "mattr": 0.898
+    }
+  },
+  {
+    "id": "corpus-05-product-description",
+    "source": "ai-test-corpus",
+    "inputWordCount": 169,
+    "chain": {
+      "ms": 21217,
+      "ok": true,
+      "quality": {
+        "readability": 85,
+        "repetition": 56,
+        "genericPhrasing": 100,
+        "sentenceVariety": 58,
+        "specificity": 74,
+        "meaningRetention": 22,
+        "lengthFit": 70,
+        "structureFit": 25,
+        "overall": 63,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → deepseek/deepseek-v4-flash",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite changed the source structure too much.",
+          "Some repeated wording or sentence starts remain.",
+          "Sentence rhythm is still a bit uniform.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 146,
+      "lenRetention": 0.864,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.386,
+      "burstinessMean": 10.43,
+      "remainingSwaps": 0,
+      "mattr": 0.821
+    },
+    "stealth": {
+      "ms": 15595,
+      "ok": true,
+      "quality": {
+        "readability": 92,
+        "repetition": 48,
+        "genericPhrasing": 100,
+        "sentenceVariety": 61,
+        "specificity": 74,
+        "meaningRetention": 44,
+        "lengthFit": 78,
+        "structureFit": 55,
+        "overall": 70,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite changed the source structure too much.",
+          "Some repeated wording or sentence starts remain.",
+          "Sentence rhythm is still a bit uniform.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 152,
+      "lenRetention": 0.899,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.46,
+      "burstinessMean": 13.82,
+      "remainingSwaps": 0,
+      "mattr": 0.885
+    }
+  },
+  {
+    "id": "phrase-pair-01-adapt-financial",
+    "source": "phrase-chase",
+    "inputWordCount": 66,
+    "chain": {
+      "ms": 14477,
+      "ok": true,
+      "quality": {
+        "readability": 91,
+        "repetition": 99,
+        "genericPhrasing": 100,
+        "sentenceVariety": 96,
+        "specificity": 76,
+        "meaningRetention": 71,
+        "lengthFit": 97,
+        "structureFit": 91,
+        "overall": 90,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → deepseek/deepseek-v4-flash",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 67,
+      "lenRetention": 1.015,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.571,
+      "burstinessMean": 13.4,
+      "remainingSwaps": 0,
+      "mattr": 0.953
+    },
+    "stealth": {
+      "ms": 9681,
+      "ok": true,
+      "quality": {
+        "readability": 98,
+        "repetition": 80,
+        "genericPhrasing": 100,
+        "sentenceVariety": 78,
+        "specificity": 71,
+        "meaningRetention": 67,
+        "lengthFit": 67,
+        "structureFit": 100,
+        "overall": 82,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 76,
+      "lenRetention": 1.152,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.367,
+      "burstinessMean": 19,
+      "remainingSwaps": 0,
+      "mattr": 0.785
+    }
+  },
+  {
+    "id": "phrase-pair-02-academic-essay",
+    "source": "phrase-chase",
+    "inputWordCount": 167,
+    "chain": {
+      "ms": 16283,
+      "ok": true,
+      "quality": {
+        "readability": 90,
+        "repetition": 86,
+        "genericPhrasing": 78,
+        "sentenceVariety": 79,
+        "specificity": 84,
+        "meaningRetention": 11,
+        "lengthFit": 33,
+        "structureFit": 72,
+        "overall": 65,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → deepseek/deepseek-v4-flash",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "The rewrite changed the source structure too much.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 116,
+      "lenRetention": 0.695,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.388,
+      "burstinessMean": 12.89,
+      "remainingSwaps": 0,
+      "mattr": 0.888
+    },
+    "stealth": {
+      "ms": 12903,
+      "ok": true,
+      "quality": {
+        "readability": 82,
+        "repetition": 90,
+        "genericPhrasing": 100,
+        "sentenceVariety": 100,
+        "specificity": 69,
+        "meaningRetention": 41,
+        "lengthFit": 91,
+        "structureFit": 100,
+        "overall": 82,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 160,
+      "lenRetention": 0.958,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.385,
+      "burstinessMean": 22.86,
+      "remainingSwaps": 0,
+      "mattr": 0.906
+    }
+  },
+  {
+    "id": "phrase-pair-03-business-copy",
+    "source": "phrase-chase",
+    "inputWordCount": 148,
+    "chain": {
+      "ms": 13954,
+      "ok": true,
+      "quality": {
+        "readability": 98,
+        "repetition": 87,
+        "genericPhrasing": 56,
+        "sentenceVariety": 84,
+        "specificity": 77,
+        "meaningRetention": 21,
+        "lengthFit": 30,
+        "structureFit": 90,
+        "overall": 64,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → deepseek/deepseek-v4-flash",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 101,
+      "lenRetention": 0.682,
+      "triggerHits": 1,
+      "triggerDensity": 9.9,
+      "triggerTopHits": {
+        "transformative": 1
+      },
+      "burstinessCV": 0.379,
+      "burstinessMean": 16.67,
+      "remainingSwaps": 1,
+      "mattr": 0.865
+    },
+    "stealth": {
+      "ms": 16816,
+      "ok": true,
+      "quality": {
+        "readability": 88,
+        "repetition": 75,
+        "genericPhrasing": 100,
+        "sentenceVariety": 75,
+        "specificity": 82,
+        "meaningRetention": 49,
+        "lengthFit": 96,
+        "structureFit": 45,
+        "overall": 78,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite changed the source structure too much.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 145,
+      "lenRetention": 0.98,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.45,
+      "burstinessMean": 12.08,
+      "remainingSwaps": 1,
+      "mattr": 0.912
+    }
+  },
+  {
+    "id": "phrase-pair-04-tech-explainer",
+    "source": "phrase-chase",
+    "inputWordCount": 173,
+    "chain": {
+      "ms": 35900,
+      "ok": true,
+      "quality": {
+        "readability": 95,
+        "repetition": 94,
+        "genericPhrasing": 34,
+        "sentenceVariety": 90,
+        "specificity": 72,
+        "meaningRetention": 8,
+        "lengthFit": 35,
+        "structureFit": 81,
+        "overall": 59,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears: employee awareness.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 122,
+      "lenRetention": 0.705,
+      "triggerHits": 3,
+      "triggerDensity": 24.59,
+      "triggerTopHits": {
+        "ultimately": 1,
+        "crucial": 1,
+        "essential": 1
+      },
+      "burstinessCV": 0.416,
+      "burstinessMean": 15.25,
+      "remainingSwaps": 1,
+      "mattr": 0.892
+    },
+    "stealth": {
+      "ms": 15012,
+      "ok": true,
+      "quality": {
+        "readability": 88,
+        "repetition": 82,
+        "genericPhrasing": 100,
+        "sentenceVariety": 75,
+        "specificity": 76,
+        "meaningRetention": 25,
+        "lengthFit": 91,
+        "structureFit": 36,
+        "overall": 73,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite changed the source structure too much.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 166,
+      "lenRetention": 0.96,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.328,
+      "burstinessMean": 11.86,
+      "remainingSwaps": 0,
+      "mattr": 0.913
+    }
+  },
+  {
+    "id": "phrase-pair-05-casual-blog",
+    "source": "phrase-chase",
+    "inputWordCount": 163,
+    "chain": {
+      "ms": 24934,
+      "ok": true,
+      "quality": {
+        "readability": 92,
+        "repetition": 93,
+        "genericPhrasing": 78,
+        "sentenceVariety": 76,
+        "specificity": 72,
+        "meaningRetention": 25,
+        "lengthFit": 31,
+        "structureFit": 90,
+        "overall": 67,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 112,
+      "lenRetention": 0.687,
+      "triggerHits": 1,
+      "triggerDensity": 8.93,
+      "triggerTopHits": {
+        "essential": 1
+      },
+      "burstinessCV": 0.202,
+      "burstinessMean": 14,
+      "remainingSwaps": 5,
+      "mattr": 0.879
+    },
+    "stealth": {
+      "ms": 8868,
+      "ok": true,
+      "quality": {
+        "readability": 98,
+        "repetition": 81,
+        "genericPhrasing": 100,
+        "sentenceVariety": 93,
+        "specificity": 70,
+        "meaningRetention": 8,
+        "lengthFit": 84,
+        "structureFit": 100,
+        "overall": 76,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 151,
+      "lenRetention": 0.926,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.459,
+      "burstinessMean": 18.88,
+      "remainingSwaps": 0,
+      "mattr": 0.853
+    }
+  },
+  {
+    "id": "phrase-pair-06-product-description",
+    "source": "phrase-chase",
+    "inputWordCount": 169,
+    "chain": {
+      "ms": 40170,
+      "ok": true,
+      "quality": {
+        "readability": 94,
+        "repetition": 78,
+        "genericPhrasing": 100,
+        "sentenceVariety": 67,
+        "specificity": 72,
+        "meaningRetention": 2,
+        "lengthFit": 15,
+        "structureFit": 81,
+        "overall": 62,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Sentence rhythm is still a bit uniform.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 104,
+      "lenRetention": 0.615,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.253,
+      "burstinessMean": 14.86,
+      "remainingSwaps": 0,
+      "mattr": 0.91
+    },
+    "stealth": {
+      "ms": 7034,
+      "ok": true,
+      "quality": {
+        "readability": 92,
+        "repetition": 58,
+        "genericPhrasing": 100,
+        "sentenceVariety": 56,
+        "specificity": 76,
+        "meaningRetention": 10,
+        "lengthFit": 44,
+        "structureFit": 73,
+        "overall": 63,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "The rewrite changed the source structure too much.",
+          "Some repeated wording or sentence starts remain.",
+          "Sentence rhythm is still a bit uniform.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 126,
+      "lenRetention": 0.746,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.276,
+      "burstinessMean": 14,
+      "remainingSwaps": 1,
+      "mattr": 0.818
+    }
+  }
+]
