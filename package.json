@@ -18,7 +18,10 @@
     "phrase-chase:generate": "node scripts/generate-phrase-chase-outputs.mjs",
     "backtest:humanizer": "node scripts/backtest-humanizer.mjs",
     "style-anchor": "node scripts/style-anchor-rewrite.mjs",
-    "style-anchor:list": "node scripts/style-anchor-rewrite.mjs --list-anchors"
+    "style-anchor:list": "node scripts/style-anchor-rewrite.mjs --list-anchors",
+    "compare:chain-vs-stealth": "node --env-file=.env.local scripts/compare-chain-vs-stealth.mjs",
+    "verify:sapling": "node --env-file=.env.local scripts/sapling-verify.mjs",
+    "collect:sw-pairs": "node --env-file=.env.local scripts/collect-stealthwriter-pairs.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

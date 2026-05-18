@@ -18,7 +18,9 @@ export type HumanizerModelPreset =
   | "chain"
   | "chain-strict"
   | "stealth"
-  | "stealth-verbose";
+  | "stealth-verbose"
+  | "stealth-verbose-v2"
+  | "stealth-sentence";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -124,6 +126,20 @@ export const MODEL_PRESETS: Array<{
     short: "StealthWriter-style anti-concision (Copyleaks-targeted)",
     description:
       "Single-call Gemini Flash rewrite using explicit anti-concision rules reverse-engineered from StealthWriter outputs that scored 0% AI on Copyleaks. Lowers information density and adds qualifier-heavy phrasing.",
+  },
+  {
+    id: "stealth-verbose-v2",
+    label: "Verbose Paraphrase v2",
+    short: "v1 prompt + trailer-copying fix",
+    description:
+      "Same approach as Verbose Paraphrase, with a refined prompt that prevents the model from copying example trailer phrases (e.g., 'so you can find weak spots') into outputs where they don't fit topically.",
+  },
+  {
+    id: "stealth-sentence",
+    label: "Sentence-Level Alternates",
+    short: "SW-mirror: per-sentence rewrites, top-ranked selected",
+    description:
+      "Splits input into sentences, generates heavy/medium/light alternates per sentence, picks the top-ranked, reassembles. Mirrors StealthWriter's architecture. Higher latency than single-call presets but may evade document-level AI fingerprinting.",
   },
 ];
 

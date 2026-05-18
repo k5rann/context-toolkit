@@ -7,6 +7,8 @@ import {
   buildHybridStylePrompt,
 } from "./humanizer-style-anchor";
 import { buildVerbosePrompt } from "./humanizer-verbose-prompt";
+import { buildVerbosePromptV2 } from "./humanizer-verbose-prompt-v2";
+import { humanizeBySentences } from "./humanizer-sentence-alternates";
 import {
   buildCandidateSetPrompt,
   buildChainHop1Prompt,
@@ -95,6 +97,18 @@ const PRESET_MODELS: Record<
     temperatures: [0.9],
     label: "Verbose Paraphrase (StealthWriter-style)",
     hopTimeoutMs: 30000,
+  },
+  "stealth-verbose-v2": {
+    rewriteModel: "gemini-2.5-flash",
+    temperatures: [0.9],
+    label: "Verbose Paraphrase v2 (fixed trailer bug)",
+    hopTimeoutMs: 30000,
+  },
+  "stealth-sentence": {
+    rewriteModel: "gemini-2.5-flash",
+    temperatures: [0.95],
+    label: "Sentence-Level Alternates (SW architecture)",
+    hopTimeoutMs: 60000,
   },
 };
 
@@ -1862,6 +1876,64 @@ export async function humanize({
       preferredModel: preset.rewriteModel,
       temperature: preset.temperatures[0],
       timeoutMs: preset.hopTimeoutMs ?? 30000,
+    });
+    const output = clean(raw);
+    const quality = scoreQuality(trimmed, output);
+    return {
+      output,
+      pass1Output: output,
+      contentMode,
+      referenceStyle,
+      modelPreset,
+      originalWordCount,
+      outputWordCount: wordCount(output),
+      passes: 1,
+      candidateCount: 1,
+      quality,
+    };
+  }
+
+  // Stealth-verbose v2: same approach as stealth-verbose but with the
+  // refined prompt that fixes literal trailer-copying from example
+  // strings into outputs where they don't fit (see humanizer-verbose-prompt-v2.ts).
+  if (modelPreset === "stealth-verbose-v2") {
+    const prompt = buildVerbosePromptV2(trimmed);
+    const raw = await generate({
+      apiKey,
+      prompt,
+      preferredModel: preset.rewriteModel,
+      temperature: preset.temperatures[0],
+      timeoutMs: preset.hopTimeoutMs ?? 30000,
+    });
+    const output = clean(raw);
+    const quality = scoreQuality(trimmed, output);
+    return {
+      output,
+      pass1Output: output,
+      contentMode,
+      referenceStyle,
+      modelPreset,
+      originalWordCount,
+      outputWordCount: wordCount(output),
+      passes: 1,
+      candidateCount: 1,
+      quality,
+    };
+  }
+
+  // Stealth-sentence: mirrors StealthWriter's architecture — splits input
+  // into sentences, generates 3-4 alternatives per sentence (heavy/medium/
+  // light + original), picks top-ranked per sentence, reassembles. Higher
+  // latency (one API call per sentence, parallelized) but per-sentence
+  // processing may avoid the document-level AI fingerprint that detectors
+  // pick up on single-call rewrites.
+  if (modelPreset === "stealth-sentence") {
+    const { output: raw } = await humanizeBySentences({
+      text: trimmed,
+      apiKey,
+      model: preset.rewriteModel,
+      concurrency: 4,
+      timeoutMs: preset.hopTimeoutMs ?? 60000,
     });
     const output = clean(raw);
     const quality = scoreQuality(trimmed, output);
