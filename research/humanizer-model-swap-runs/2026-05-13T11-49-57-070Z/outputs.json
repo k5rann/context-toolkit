@@ -1,0 +1,135 @@
+{
+  "createdAt": "2026-05-13T11:50:56.269Z",
+  "routes": [
+    {
+      "id": "current-chain",
+      "label": "Current app chain",
+      "type": "app-chain",
+      "modelPreset": "chain",
+      "notes": "Production research baseline: current 2-hop Standard route."
+    },
+    {
+      "id": "qwen-free",
+      "label": "Qwen direct",
+      "type": "direct",
+      "model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "notes": "Qwen free variant from OpenRouter's current free-model list."
+    },
+    {
+      "id": "deepseek-free",
+      "label": "DeepSeek direct",
+      "type": "direct",
+      "model": "deepseek/deepseek-v4-flash",
+      "notes": "Current DeepSeek route from OpenRouter model list; not marked free."
+    },
+    {
+      "id": "minimax-free",
+      "label": "MiniMax direct",
+      "type": "direct",
+      "model": "minimax/minimax-m2.5:free",
+      "notes": "MiniMax route from prior Humanizer experiments."
+    },
+    {
+      "id": "qwen-deepseek-chain",
+      "label": "Qwen -> DeepSeek chain",
+      "type": "manual-chain",
+      "hop1Model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "hop2Model": "deepseek/deepseek-v4-flash",
+      "notes": "Two different free model families with the app's chain prompts."
+    },
+    {
+      "id": "deepseek-qwen-chain",
+      "label": "DeepSeek -> Qwen chain",
+      "type": "manual-chain",
+      "hop1Model": "deepseek/deepseek-v4-flash",
+      "hop2Model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "notes": "Reverse order of the Qwen/DeepSeek chain."
+    }
+  ],
+  "samples": [
+    {
+      "id": "ai-generic-essay",
+      "category": "generic essay",
+      "title": "Artificial intelligence in modern life",
+      "text": "Artificial intelligence has become one of the most transformative technologies in today's digital age, reshaping how businesses, schools, and individuals make decisions. Its ability to analyze large amounts of data, identify patterns, and generate useful insights allows organizations to improve productivity, streamline operations, and respond more effectively to changing needs. In business, AI can support customer service, marketing, cybersecurity, logistics, and financial planning by helping teams leverage information more efficiently.\n\nMoreover, AI is playing a crucial role in education by creating personalized learning experiences and giving students access to tools that can explain complex topics in simple ways. Teachers can use AI-powered platforms to track performance, identify learning gaps, and provide targeted support. However, this shift also raises important questions about academic honesty, privacy, and the long-term effect of technology on critical thinking.\n\nUltimately, the future of AI will depend on how responsibly it is developed and used. To fully benefit from this technology, society must balance innovation with ethical considerations, transparency, and human judgment."
+    }
+  ],
+  "rows": [
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "current-chain",
+      "routeLabel": "Current app chain",
+      "generator": "Generator: meta-llama/llama-3.3-70b-instruct → deepseek/deepseek-v4-flash",
+      "inputWords": 165,
+      "outputWords": 126,
+      "passes": 2,
+      "leakDetected": false,
+      "output": "Teachers now use AI platforms to check student performance, find learning gaps, and give help. This makes lessons more personal. Complex topics get explained in simple ways. AI also helps business - i.e., customer service, marketing, cybersecurity, logistics, and financial planning.\n\nBy looking at big data sets and finding patterns, organizations can get useful insights. This improves productivity and makes operations run smoother. It also helps them respond faster to changes. The AI can use information more efficiently.\n\nSchools, businesses, and individuals use this tech for decisions. But there are concerns about academic honesty, privacy, and thinking skills. The future of AI will need responsible development. It's important to balance innovation with ethics and transparency plus human judgment. Good as it is.\n\n(Note: about 115 words)",
+      "pass1Output": "With AI-powered platforms, teachers can track performance, identify learning gaps, and provide targeted support, creating personalized learning experiences that explain complex topics in simple ways for students. AI is playing a crucial role in education, and its impact is also being felt in business, where it can support customer service, marketing, cybersecurity, logistics, and financial planning. By analyzing large amounts of data, identifying patterns, and generating useful insights, organizations can improve productivity, streamline operations, and respond more effectively to changing needs - all with the help of AI's ability to leverage information more efficiently. This technology is used by schools, businesses, and individuals to make decisions. However, there are questions about academic honesty, privacy, and the effect on critical thinking. The future of AI depends on responsible development and use, requiring a balance of innovation with ethics, transparency, and human judgment, which will be crucial for society to fully benefit from this technology."
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "qwen-free",
+      "routeLabel": "Qwen direct",
+      "generator": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "inputWords": 165,
+      "outputWords": 0,
+      "passes": 0,
+      "leakDetected": false,
+      "output": "",
+      "error": "OpenRouter 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"qwen/qwen3-next-80b-a3b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations\",\"provider_name\":\"Venice\",\"is_"
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "deepseek-free",
+      "routeLabel": "DeepSeek direct",
+      "generator": "deepseek/deepseek-v4-flash",
+      "inputWords": 165,
+      "outputWords": 113,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "AI is reshaping how businesses, schools, and individuals make decisions. It can analyze large data sets, spot patterns, and generate insights. This helps organizations improve productivity, streamline operations, and respond to changing needs. In business, AI supports customer service, marketing, cybersecurity, logistics, and financial planning.\n\nIn education, AI creates personalized learning and gives students tools that explain complex topics simply. Teachers use AI platforms to track performance, find learning gaps, and offer targeted support. But this raises questions about academic honesty, privacy, and how technology affects critical thinking over time.\n\nThe future of AI depends on responsible development and use. Society must balance innovation with ethics, transparency, and human judgment to fully benefit."
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "minimax-free",
+      "routeLabel": "MiniMax direct",
+      "generator": "minimax/minimax-m2.5:free",
+      "inputWords": 165,
+      "outputWords": 141,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "AI has become one of the most transformative technologies in the digital age. It changes how businesses, schools, and individuals make decisions. AI can analyze large amounts of data, spot patterns, and produce useful insights. These capabilities help organizations boost productivity, streamline operations, and adapt to shifting demands.\n\nIn business, AI supports customer service, marketing, cybersecurity, logistics, and financial planning. Teams can leverage information more efficiently with these tools.\n\nIn education, AI enables personalized learning experiences. Students gain access to tools that break down complex topics into simpler explanations. Teachers use AI platforms to monitor student performance, find learning gaps, and offer focused support. This shift brings concerns about academic honesty, privacy, and how technology affects critical thinking over time.\n\nThe future of AI depends on responsible development and use. Society must balance innovation with ethical considerations, transparency, and human judgment."
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "qwen-deepseek-chain",
+      "routeLabel": "Qwen -> DeepSeek chain",
+      "generator": "qwen/qwen3-next-80b-a3b-instruct:free -> deepseek/deepseek-v4-flash",
+      "inputWords": 165,
+      "outputWords": 0,
+      "passes": 0,
+      "leakDetected": false,
+      "output": "",
+      "error": "OpenRouter 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"qwen/qwen3-next-80b-a3b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations\",\"provider_name\":\"Venice\",\"is_"
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "deepseek-qwen-chain",
+      "routeLabel": "DeepSeek -> Qwen chain",
+      "generator": "deepseek/deepseek-v4-flash -> qwen/qwen3-next-80b-a3b-instruct:free",
+      "inputWords": 165,
+      "outputWords": 0,
+      "passes": 0,
+      "leakDetected": false,
+      "output": "",
+      "error": "OpenRouter 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"qwen/qwen3-next-80b-a3b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations\",\"provider_name\":\"Venice\",\"is_"
+    }
+  ]
+}

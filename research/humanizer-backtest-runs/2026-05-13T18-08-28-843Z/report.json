@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-05-13T18-08-28-843Z",
+  "preset": "chain",
+  "detector": "gptzero",
+  "humanizeEnabled": false,
+  "results": [
+    {
+      "file": "01-academic-essay.txt",
+      "baseline": {
+        "aiPct": 95,
+        "detector": "local heuristic (GPTZero unavailable)"
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    },
+    {
+      "file": "02-business-copy.txt",
+      "baseline": {
+        "aiPct": 87,
+        "detector": "local heuristic (GPTZero unavailable)"
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    },
+    {
+      "file": "03-tech-explainer.txt",
+      "baseline": {
+        "aiPct": 83,
+        "detector": "local heuristic (GPTZero unavailable)"
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    },
+    {
+      "file": "04-casual-blog.txt",
+      "baseline": {
+        "aiPct": 83,
+        "detector": "local heuristic (GPTZero unavailable)"
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    },
+    {
+      "file": "05-product-description.txt",
+      "baseline": {
+        "aiPct": 83,
+        "detector": "local heuristic (GPTZero unavailable)"
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    }
+  ]
+}

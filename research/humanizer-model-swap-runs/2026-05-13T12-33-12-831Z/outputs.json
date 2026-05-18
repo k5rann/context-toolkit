@@ -1,0 +1,160 @@
+{
+  "createdAt": "2026-05-13T12:37:49.376Z",
+  "routes": [
+    {
+      "id": "current-chain",
+      "label": "Current app chain",
+      "type": "app-chain",
+      "modelPreset": "chain",
+      "notes": "Production research baseline: current 2-hop Standard route."
+    },
+    {
+      "id": "deepseek-v4",
+      "label": "DeepSeek direct",
+      "type": "direct",
+      "model": "deepseek/deepseek-v4-flash",
+      "notes": "Current DeepSeek route from OpenRouter model list; not marked free."
+    },
+    {
+      "id": "minimax-free",
+      "label": "MiniMax direct",
+      "type": "direct",
+      "model": "minimax/minimax-m2.5:free",
+      "notes": "MiniMax route from prior Humanizer experiments."
+    }
+  ],
+  "samples": [
+    {
+      "id": "ai-generic-essay",
+      "category": "generic essay",
+      "title": "Artificial intelligence in modern life",
+      "text": "Artificial intelligence has become one of the most transformative technologies in today's digital age, reshaping how businesses, schools, and individuals make decisions. Its ability to analyze large amounts of data, identify patterns, and generate useful insights allows organizations to improve productivity, streamline operations, and respond more effectively to changing needs. In business, AI can support customer service, marketing, cybersecurity, logistics, and financial planning by helping teams leverage information more efficiently.\n\nMoreover, AI is playing a crucial role in education by creating personalized learning experiences and giving students access to tools that can explain complex topics in simple ways. Teachers can use AI-powered platforms to track performance, identify learning gaps, and provide targeted support. However, this shift also raises important questions about academic honesty, privacy, and the long-term effect of technology on critical thinking.\n\nUltimately, the future of AI will depend on how responsibly it is developed and used. To fully benefit from this technology, society must balance innovation with ethical considerations, transparency, and human judgment."
+    },
+    {
+      "id": "cybersecurity-explainer",
+      "category": "cybersecurity",
+      "title": "Modern cybersecurity risks",
+      "text": "Cybersecurity has become one of the most pressing concerns of the digital age as organizations face a rapidly evolving threat landscape. From sophisticated phishing campaigns to ransomware attacks targeting critical infrastructure, malicious actors are constantly developing new methods to exploit vulnerabilities. This shift underscores the importance of adopting a multifaceted approach to digital security, one that not only addresses technical safeguards but also fosters a culture of awareness among employees.\n\nCompanies must implement robust solutions that protect sensitive information, monitor unusual activity, and respond quickly when incidents occur. Technical tools alone are not enough, because a single employee clicking the wrong link can create significant exposure. Training, clear policies, and regular testing all play a crucial role in building resilience.\n\nAs AI-powered threats emerge, the need for proactive defense has never been more critical. Organizations that fail to keep pace may find themselves vulnerable to financial loss, reputational damage, and operational disruption."
+    },
+    {
+      "id": "business-about-copy",
+      "category": "business copy",
+      "title": "Digital marketing agency about section",
+      "text": "At NovaReach, we provide comprehensive digital marketing solutions designed to help businesses grow in today's competitive landscape. Our team leverages data-driven strategies, innovative tools, and creative storytelling to enhance brand visibility, streamline customer engagement, and unlock long-term success. Whether a company needs search engine optimization, social media management, paid advertising, or website content, we create tailored strategies that align with each client's unique needs.\n\nWhat sets us apart is our commitment to excellence and our passion for helping brands reach their full potential. We believe marketing is not just about generating clicks; it is about building meaningful relationships with customers and creating measurable impact. By combining analytics, design, and industry expertise, NovaReach serves as a trusted partner for businesses that want to elevate their online presence and achieve sustainable growth."
+    }
+  ],
+  "rows": [
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "current-chain",
+      "routeLabel": "Current app chain",
+      "generator": "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+      "inputWords": 165,
+      "outputWords": 135,
+      "passes": 2,
+      "leakDetected": false,
+      "output": "AI-powered platforms help teachers track student performance, identify learning gaps, and offer targeted support. This creates personalized learning experiences. AI simplifies complex topics, making information more accessible to students. In business, AI supports functions like customer service, marketing, and financial planning. It analyzes large data sets, identifies patterns, and provides useful insights. This helps organizations improve productivity and adapt to changes. The ability to streamline operations is a key benefit of AI. However, its future depends on responsible development and use. Balancing innovation with ethical considerations, transparency, and human judgment is crucial. AI raises questions about academic honesty, privacy, and critical thinking, but its benefits are clear. Over 63% of businesses use AI, and this number will grow. Society must be ready for these changes. Note: AI's impact on critical thinking is an important consideration.",
+      "pass1Output": "With AI-powered platforms, teachers can track performance, identify learning gaps, and provide targeted support, creating personalized learning experiences for students. This technology can also explain complex topics in simple ways, giving students better access to information. In business, AI supports various functions, including customer service, marketing, cybersecurity, logistics, and financial planning, by helping teams leverage information more efficiently. It analyzes large amounts of data, identifies patterns, and generates useful insights, allowing organizations to improve productivity and respond to changing needs. AI's ability to streamline operations is crucial. The future of AI will depend on how responsibly it is developed and used - balancing innovation with ethical considerations, transparency, and human judgment is key. AI raises important questions about academic honesty, privacy, and its long-term effect on critical thinking, but its potential benefits are undeniable, with organizations, schools, and individuals relying on it to make decisions, 63% of businesses already using AI, which will only continue to grow, and society must be prepared."
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "deepseek-v4",
+      "routeLabel": "DeepSeek direct",
+      "generator": "deepseek/deepseek-v4-flash",
+      "inputWords": 165,
+      "outputWords": 119,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "AI is reshaping how businesses, schools, and people make decisions. It analyzes large data sets, finds patterns, and generates insights. Organizations use it to boost productivity, streamline operations, and respond faster to change. In business, AI supports customer service, marketing, cybersecurity, logistics, and financial planning by helping teams use information more efficiently.\n\nIn education, AI creates personalized learning experiences. Students get tools that explain complex topics simply. Teachers use AI platforms to track performance, spot learning gaps, and deliver targeted support. But this shift raises questions about academic honesty, privacy, and long-term effects on critical thinking.\n\nThe future of AI depends on responsible development and use. Society must balance innovation with ethics, transparency, and human judgment to fully benefit."
+    },
+    {
+      "sampleId": "ai-generic-essay",
+      "sampleCategory": "generic essay",
+      "routeId": "minimax-free",
+      "routeLabel": "MiniMax direct",
+      "generator": "minimax/minimax-m2.5:free",
+      "inputWords": 165,
+      "outputWords": 146,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "AI has become one of the most important technologies in today's digital world. It changes how businesses, schools, and people make decisions. AI can look at huge amounts of data, find patterns, and create useful information. This helps organizations work better and respond faster to changes.\n\nIn business, AI helps with customer service, marketing, cybersecurity, logistics, and money planning. Teams can use information more efficiently this way.\n\nIn education, AI creates personalized learning experiences. Students can use tools that explain difficult ideas in simple ways. Teachers can use AI to see how students are doing, find where they struggle, and give them the right help. But this brings up concerns about academic honesty, privacy, and how technology might affect critical thinking.\n\nThe future of AI depends on how carefully we develop and use it. Society needs to balance new technology with ethics, honesty, and human judgment."
+    },
+    {
+      "sampleId": "cybersecurity-explainer",
+      "sampleCategory": "cybersecurity",
+      "routeId": "current-chain",
+      "routeLabel": "Current app chain",
+      "generator": "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+      "inputWords": 152,
+      "outputWords": 140,
+      "passes": 2,
+      "leakDetected": false,
+      "output": "A single employee clicking the wrong link can lead to significant exposure, showing how important a multifaceted approach to digital security is. Malicious actors are always coming up with new ways to exploit vulnerabilities, using sophisticated phishing and ransomware attacks on critical infrastructure. Technical tools are essential, but they are not enough by themselves. Training, clear policies, and regular testing are needed to build resilience. With AI-powered threats on the rise, the risks are very high. Companies that do not keep up might face financial losses, reputational damage, and operational disruptions. Organizations need strong solutions to protect sensitive data, monitor unusual activity, and respond quickly to incidents. Every company must adapt to the rapidly changing threat landscape, as cybersecurity has become one of the biggest concerns of the digital age. Note: Training and policies are crucial for keeping everyone vigilant.",
+      "pass1Output": "A single employee clicking the wrong link can create significant exposure, highlighting the importance of a multifaceted approach to digital security. With malicious actors constantly developing new methods to exploit vulnerabilities, using sophisticated phishing campaigns and ransomware attacks targeting critical infrastructure, companies must be proactive. Technical tools are crucial, but not enough on their own - they must be combined with training, clear policies, and regular testing to build resilience. As AI-powered threats emerge, the stakes are high: organizations that fail to keep pace may face financial loss, reputational damage, and operational disruption. Companies need robust solutions to protect sensitive information, monitor unusual activity, and respond quickly to incidents, underscoring the need for a culture of awareness among employees, with 100% of organizations needing to adapt to the rapidly evolving threat landscape, and cybersecurity becoming one of the most pressing concerns of the digital age for over 90% of organizations, affecting more than 75% of companies."
+    },
+    {
+      "sampleId": "cybersecurity-explainer",
+      "sampleCategory": "cybersecurity",
+      "routeId": "deepseek-v4",
+      "routeLabel": "DeepSeek direct",
+      "generator": "deepseek/deepseek-v4-flash",
+      "inputWords": 152,
+      "outputWords": 98,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "Cybersecurity is a major concern. Organizations face a rapidly evolving threat landscape. Malicious actors develop new methods to exploit vulnerabilities - sophisticated phishing campaigns, ransomware attacks on critical infrastructure. A multifaceted approach is needed. Technical safeguards matter. So does employee awareness.\n\nCompanies need robust solutions. Protect sensitive information. Monitor unusual activity. Respond quickly when incidents happen. Technical tools alone aren't enough. One employee clicking the wrong link creates significant exposure. Training, clear policies, regular testing build resilience.\n\nAI-powered threats are emerging. Proactive defense is critical now. Organizations that don't keep pace risk financial loss, reputational damage, operational disruption."
+    },
+    {
+      "sampleId": "cybersecurity-explainer",
+      "sampleCategory": "cybersecurity",
+      "routeId": "minimax-free",
+      "routeLabel": "MiniMax direct",
+      "generator": "minimax/minimax-m2.5:free",
+      "inputWords": 152,
+      "outputWords": 132,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "Cybersecurity has become one of the most pressing concerns of the digital age. Organizations now face a threat landscape that changes rapidly. Attackers use sophisticated phishing campaigns. They launch ransomware attacks against critical infrastructure. These malicious actors keep finding new ways to exploit vulnerabilities.\n\nA multifaceted approach matters. Technical safeguards alone won't work. Companies also need to build a culture of awareness among employees.\n\nRobust solutions are necessary. Protect sensitive information. Monitor for unusual activity. Respond quickly when incidents happen. But technical tools aren't enough. One employee clicking the wrong link can create serious exposure. Training helps. Clear policies help. Regular testing builds resilience.\n\nAI-powered threats are emerging now. The need for proactive defense has never been more critical. Organizations that don't keep pace risk financial loss, reputational damage, and operational disruption."
+    },
+    {
+      "sampleId": "business-about-copy",
+      "sampleCategory": "business copy",
+      "routeId": "current-chain",
+      "routeLabel": "Current app chain",
+      "generator": "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+      "inputWords": 130,
+      "outputWords": 109,
+      "passes": 2,
+      "leakDetected": false,
+      "output": "NovaReach stands out because we are passionate about helping brands reach their full potential. We believe marketing is about building meaningful relationships with customers, not just getting clicks. By combining analytics, design, and industry expertise, we create customized strategies that drive results. Our team uses data-driven methods, innovative tools, and creative storytelling to boost brand visibility and ensure long-term success. We offer a range of services, including SEO, social media management, paid advertising, and website content. With a focus on measurable impact, NovaReach is a trusted partner for businesses aiming to elevate their online presence and achieve sustainable growth. Worth mentioning: we help businesses thrive in today's competitive landscape.",
+      "pass1Output": "What sets NovaReach apart is our commitment to excellence and passion for helping brands reach their full potential - we believe marketing is about building meaningful relationships with customers, not just generating clicks. By combining analytics, design, and industry expertise, we create tailored strategies that drive results. Our team leverages data-driven strategies, innovative tools, and creative storytelling to enhance brand visibility and unlock long-term success. We offer a range of services, including search engine optimization, social media management, paid advertising, and website content. With a focus on measurable impact, NovaReach serves as a trusted partner for businesses looking to elevate their online presence and achieve sustainable growth, helping them grow in today's competitive landscape with comprehensive digital marketing solutions."
+    },
+    {
+      "sampleId": "business-about-copy",
+      "sampleCategory": "business copy",
+      "routeId": "deepseek-v4",
+      "routeLabel": "DeepSeek direct",
+      "generator": "deepseek/deepseek-v4-flash",
+      "inputWords": 130,
+      "outputWords": 94,
+      "passes": 1,
+      "leakDetected": false,
+      "output": "NovaReach does digital marketing. We use data-driven strategies, innovative tools, and creative storytelling. We boost brand visibility, streamline customer engagement, and unlock long-term success. Whether a company needs SEO, social media management, paid advertising, or website content, we create tailored strategies. Our commitment to excellence and passion for helping brands reach their full potential sets us apart. Marketing isn't just clicks. It's about building real relationships and creating measurable impact. We combine analytics, design, and industry expertise. We are a trusted partner for businesses wanting to elevate their online presence and achieve sustainable growth."
+    },
+    {
+      "sampleId": "business-about-copy",
+      "sampleCategory": "business copy",
+      "routeId": "minimax-free",
+      "routeLabel": "MiniMax direct",
+      "generator": "minimax/minimax-m2.5:free",
+      "inputWords": 130,
+      "outputWords": 0,
+      "passes": 0,
+      "leakDetected": false,
+      "output": "",
+      "error": "OpenRouter request timed out after 60s. Free-tier model may be slow or overloaded; try a different mode or retry in a moment."
+    }
+  ]
+}

@@ -1,4 +1,11 @@
 import { generate } from "./llm";
+import { injectBurstiness } from "./humanizer-burstiness";
+import { injectPhraseDict } from "./humanizer-phrase-dict";
+import { injectStructural } from "./humanizer-structural";
+import {
+  selectAnchor,
+  buildHybridStylePrompt,
+} from "./humanizer-style-anchor";
 import {
   buildCandidateSetPrompt,
   buildChainHop1Prompt,
@@ -74,6 +81,12 @@ const PRESET_MODELS: Record<
     ],
     temperatures: [1.05],
     label: "Chain Strict (no fact loss)",
+    hopTimeoutMs: 30000,
+  },
+  stealth: {
+    rewriteModel: "gemini-2.5-flash",
+    temperatures: [0.95],
+    label: "Style Anchor (Copyleaks-tested)",
     hopTimeoutMs: 30000,
   },
 };
@@ -168,6 +181,53 @@ function stripPreamble(s: string): string {
     .replace(/^\s*(?:rewritten|revised|output|final)\s*\([^\n]*\)\s*:?\s*\n+/im, "");
 }
 
+function stripPromptScaffolding(s: string): string {
+  let output = s;
+
+  // Some chain models leak their internal "content type detected" diagnosis
+  // before the actual rewrite. Drop that leading analysis block through the
+  // next markdown separator or blank line.
+  //
+  // NOTE: the lookahead must distinguish `---` (no word boundary after) from
+  // word labels (REWRITTEN, FINAL, OUTPUT — which need `\b` to avoid matching
+  // a longer word that just starts with that prefix). Earlier version used
+  // `(?:---|REWRITTEN|FINAL|OUTPUT)\b` which made `\b` apply to ALL
+  // alternatives; that caused `---\n` to fail the lookahead and the greedy
+  // loop chewed through the real humanized content.
+  output = output.replace(
+    /^\s*(?:\*\*)?\s*(?:content\s+type\s+detected|detected\s+content\s+type|content\s+type|genre\s+detected|detected\s+genre)\s*(?:\*\*)?\s*:?[^\n]*(?:\n(?!\s*(?:---|REWRITTEN\b|FINAL\b|OUTPUT\b))[^\n]*){0,4}\n\s*---\s*\n*/i,
+    ""
+  );
+
+  output = output.replace(
+    /^\s*(?:\*\*)?\s*(?:content\s+type\s+detected|detected\s+content\s+type|content\s+type|genre\s+detected|detected\s+genre)\s*(?:\*\*)?\s*:?[^\n]*(?:\n\s*){1,2}/i,
+    ""
+  );
+
+  // Remove leaked prompt/task labels at the top of the response.
+  output = output.replace(
+    /^\s*(?:\*\*)?\s*(?:analysis|reasoning|draft|final answer|final output|rewritten text|rewritten|output)\s*(?:\*\*)?\s*:?\s*\n+/i,
+    ""
+  );
+
+  // Drop standalone markdown separators that models often echo from prompts.
+  output = output.replace(/^\s*---+\s*$/gm, "");
+
+  // Strip trailing model commentary like "(Note: about 115 words)" or
+  // "Word count: 142 words" when the model reports compliance instead of
+  // returning only rewritten text.
+  output = output.replace(
+    /\n?\s*\(?\s*(?:note|word count|words)\s*:?\s*(?:about\s*)?\d+\s+words?\.?\s*\)?\s*$/i,
+    ""
+  );
+
+  // The UI displays plain text, so remove markdown emphasis wrappers if a
+  // model adds them around labels or phrases.
+  output = output.replace(/\*\*([^*\n]{1,160})\*\*/g, "$1");
+
+  return output;
+}
+
 /**
  * Strip Unicode characters that AI models leak (em-dashes, curly quotes,
  * zero-width spaces, narrow no-break spaces, etc.). These are flagged by
@@ -211,7 +271,28 @@ function sanitizeUnicode(text: string): string {
 }
 
 function clean(raw: string): string {
-  return sanitizeUnicode(stripWrappingQuotes(stripPreamble(raw))).trim();
+  const cleaned = sanitizeUnicode(
+    stripPromptScaffolding(stripWrappingQuotes(stripPreamble(raw)))
+  ).trim();
+
+  let output = cleaned;
+  // Order matters: structural rewrites first (they restructure clauses
+  // that the lexical dict then prunes), burstiness last (operates on
+  // sentence boundaries which structural rewrites may shift).
+  if (process.env.HUMANIZER_STRUCTURAL === "on") {
+    output = injectStructural(output).trim();
+  }
+  if (process.env.HUMANIZER_PHRASE_DICT === "on") {
+    output = injectPhraseDict(output).trim();
+  }
+  if (process.env.HUMANIZER_BURSTINESS === "on") {
+    output = injectBurstiness(output).trim();
+  }
+  return output;
+}
+
+export function cleanHumanizerOutputForTest(raw: string): string {
+  return clean(raw);
 }
 
 // ── Level 1 banned vocabulary (12-level human writing framework) ─────
@@ -1735,6 +1816,33 @@ export async function humanize({
   const trimmed = text.trim();
   const originalWordCount = wordCount(trimmed);
   const preset = PRESET_MODELS[modelPreset] ?? PRESET_MODELS.minimax;
+
+  // Stealth preset: style-anchor rewrite (Copyleaks-tested)
+  if (modelPreset === "stealth") {
+    const anchor = selectAnchor(trimmed);
+    const prompt = buildHybridStylePrompt(trimmed, anchor);
+    const raw = await generate({
+      apiKey,
+      prompt,
+      preferredModel: preset.rewriteModel,
+      temperature: preset.temperatures[0],
+      timeoutMs: preset.hopTimeoutMs ?? 30000,
+    });
+    const output = clean(raw);
+    const quality = scoreQuality(trimmed, output);
+    return {
+      output,
+      pass1Output: output,
+      contentMode,
+      referenceStyle,
+      modelPreset,
+      originalWordCount,
+      outputWordCount: wordCount(output),
+      passes: 1,
+      candidateCount: 1,
+      quality,
+    };
+  }
 
   // Chain presets use a dedicated multi-hop path
   if (preset.refineModel) {

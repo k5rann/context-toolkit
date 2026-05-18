@@ -16,7 +16,8 @@ export type HumanizerModelPreset =
   | "minimax"
   | "minimax-deep"
   | "chain"
-  | "chain-strict";
+  | "chain-strict"
+  | "stealth";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -108,6 +109,13 @@ export const MODEL_PRESETS: Array<{
     short: "Chain, all facts preserved",
     description:
       "Same 2-model chain but preserves every fact and avoids the tangential aside. Slightly higher detection score, zero information loss.",
+  },
+  {
+    id: "stealth",
+    label: "Style Anchor",
+    short: "Copyleaks-tested human voice",
+    description:
+      "Rewrites using a real human writing sample as a style target. Tested against Copyleaks with clean 'All Clear' results.",
   },
 ];
 
