@@ -105,7 +105,7 @@ const PRESET_MODELS: Record<
     hopTimeoutMs: 30000,
   },
   "stealth-sentence": {
-    rewriteModel: "gemini-2.5-flash",
+    rewriteModel: "openai/gpt-4o-mini",
     temperatures: [0.95],
     label: "Sentence-Level Alternates (SW architecture)",
     hopTimeoutMs: 60000,
