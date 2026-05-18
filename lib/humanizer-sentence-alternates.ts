@@ -111,15 +111,8 @@ export async function generateSentenceAlternates(opts: {
   // Always include the original as lowest-ranked alternative (per SW pattern)
   alternatives.push({ text: sentence, rank: 0.05 });
 
-  // experiment iter 1: select MEDIUM (rank 0.85) instead of heaviest.
-  // SW's outputs run 1.06x input length with low burstiness; the heaviest
-  // rewrite typically lengthens and restructures aggressively, moving us
-  // AWAY from SW's tight stylometric fingerprint.
-  const TARGET_RANK = 0.85;
   const selected = alternatives.reduce((best, cur) =>
-    Math.abs(cur.rank - TARGET_RANK) < Math.abs(best.rank - TARGET_RANK)
-      ? cur
-      : best
+    cur.rank > best.rank ? cur : best
   ).text;
 
   return { original: sentence, alternatives, selected };
