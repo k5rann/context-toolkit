@@ -1,24 +1,35 @@
 #!/usr/bin/env node
 /**
- * Sapling AI detector verify command for autoresearch loop.
+ * AI detector verify command for autoresearch loop.
  *
  * For a given preset, humanizes every corpus sample, scores each output
- * with Sapling's AI detector, and prints the MEAN AI% to stdout (so the
+ * with an AI detector, and prints the MEAN AI% to stdout (so the
  * autoresearch loop can capture it as the metric).
  *
  * Per-sample progress goes to stderr to keep stdout clean.
  *
  * Goal of the loop: drive this number DOWN (lower = more human-like).
  *
+ * Supported detectors (--detector flag):
+ *   sapling   — Sapling AI detector (https://api.sapling.ai). Needs paid plan
+ *               as of 2026-05; free tier on the detection endpoint not available.
+ *   hf-openai — openai-community/roberta-base-openai-detector via HF Inference.
+ *               Trained on GPT-2 era, weaker than Sapling but free. Best of
+ *               the available HF AI-detectors as of probe on 2026-05-18.
+ *   hf-simpleai — Hello-SimpleAI/chatgpt-detector-roberta via HF. Probe
+ *                 showed it calls obvious AI text "Human" — DO NOT USE for
+ *                 directional signal.
+ *
  * Usage:
  *   node --env-file=.env.local scripts/sapling-verify.mjs --preset stealth-verbose
- *   node --env-file=.env.local scripts/sapling-verify.mjs --preset chain --save
+ *   node --env-file=.env.local scripts/sapling-verify.mjs --preset chain --detector hf-openai --save
  *   node --env-file=.env.local scripts/sapling-verify.mjs --preset stealth-verbose --limit 5
  *
  * Environment:
- *   SAPLING_API_KEY  — required (free tier at sapling.ai)
- *   GEMINI_API_KEY   — required (for stealth presets)
+ *   GEMINI_API_KEY     — required (for stealth presets)
  *   OPENROUTER_API_KEY — required (for chain presets, MiniMax)
+ *   SAPLING_API_KEY    — required ONLY if --detector sapling
+ *   HUGGINGFACE_API_KEY — required ONLY if --detector hf-*
  *
  * Exit codes:
  *   0 — ran cleanly, AI% printed to stdout
@@ -42,6 +53,11 @@ const jiti = createJiti(ROOT, { alias: { "@": ROOT } });
 const { humanize } = jiti(path.join(ROOT, "lib/humanizer.ts"));
 
 const SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect";
+const HF_BASE = "https://router.huggingface.co/hf-inference/models";
+const HF_MODELS = {
+  "hf-openai": "openai-community/roberta-base-openai-detector",
+  "hf-simpleai": "Hello-SimpleAI/chatgpt-detector-roberta",
+};
 
 // ── flag parsing ────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -50,18 +66,39 @@ function flag(name, fallback) {
   return i === -1 ? fallback : args[i + 1];
 }
 const PRESET = flag("--preset", "stealth-verbose");
+const DETECTOR = flag("--detector", "hf-openai");
 const LIMIT = Number(flag("--limit", "0")) || 0;
 const SAVE = args.includes("--save");
 const QUIET = args.includes("--quiet");
 
+if (!["sapling", "hf-openai", "hf-simpleai"].includes(DETECTOR)) {
+  console.error(
+    `Unknown --detector ${DETECTOR}. Options: sapling, hf-openai, hf-simpleai`
+  );
+  process.exit(1);
+}
+
 // ── env validation ──────────────────────────────────────────────────────
 const SAPLING_KEY = process.env.SAPLING_API_KEY;
+// Use HUGGINGFACE_API_KEY (confirmed-working key) by default. Allow override
+// via HF_DETECTOR_KEY only if explicitly opted in via HF_DETECTOR_KEY_PRIMARY=1.
+// (The newer HF token created 2026-05-18 lacks Inference API permissions and
+// returns 403; the older HUGGINGFACE_API_KEY has full access.)
+const HF_KEY = process.env.HF_DETECTOR_KEY_PRIMARY === "1"
+  ? (process.env.HF_DETECTOR_KEY || process.env.HUGGINGFACE_API_KEY)
+  : (process.env.HUGGINGFACE_API_KEY || process.env.HF_DETECTOR_KEY);
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-if (!SAPLING_KEY) {
+
+if (DETECTOR === "sapling" && !SAPLING_KEY) {
   console.error(
     "SAPLING_API_KEY missing. Get one at sapling.ai and add to .env.local.\n" +
-      "Then run: node --env-file=.env.local scripts/sapling-verify.mjs --preset <name>"
+      "Note: Sapling requires a paid plan on the AI detection endpoint as of 2026-05.\n" +
+      "Free alternative: --detector hf-openai (uses HF_DETECTOR_KEY or HUGGINGFACE_API_KEY)."
   );
+  process.exit(1);
+}
+if (DETECTOR.startsWith("hf-") && !HF_KEY) {
+  console.error("HF_DETECTOR_KEY (or HUGGINGFACE_API_KEY) missing for HF detector.");
   process.exit(1);
 }
 if (!GEMINI_KEY) {
@@ -130,13 +167,57 @@ async function saplingScore(text) {
   return data.score * 100;
 }
 
+// ── HuggingFace detector ────────────────────────────────────────────────
+async function hfScore(text, modelId) {
+  // HF inference can return:
+  //   [[{label, score}, ...]] or [{label, score}, ...]
+  //
+  // openai-community labels: "Real" (human), "Fake" (AI)
+  // hello-simpleai labels: "Human", "ChatGPT"
+  //
+  // We normalize by finding the AI-labeled score.
+  const url = `${HF_BASE}/${modelId}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${HF_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ inputs: text }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`HF HTTP ${res.status}: ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  // Flatten nested array
+  const flat = Array.isArray(data?.[0]) ? data[0] : data;
+  if (!Array.isArray(flat)) {
+    throw new Error(`HF response unexpected shape: ${JSON.stringify(data).slice(0, 200)}`);
+  }
+  // Find AI-labeled entry (case-insensitive match on Fake/ChatGPT/AI/Generated)
+  const aiEntry = flat.find((e) =>
+    /^(fake|chatgpt|ai|generated|artificial)$/i.test(e.label)
+  );
+  if (!aiEntry) {
+    throw new Error(`HF response missing AI-labeled entry: ${JSON.stringify(flat).slice(0, 200)}`);
+  }
+  return aiEntry.score * 100;
+}
+
+async function detectorScore(text) {
+  if (DETECTOR === "sapling") return saplingScore(text);
+  if (DETECTOR.startsWith("hf-")) return hfScore(text, HF_MODELS[DETECTOR]);
+  throw new Error(`Unknown detector ${DETECTOR}`);
+}
+
 // ── main ────────────────────────────────────────────────────────────────
 async function main() {
   const corpus = await loadCorpus();
   const samples = LIMIT > 0 ? corpus.slice(0, LIMIT) : corpus;
   if (!QUIET) {
     process.stderr.write(
-      `[sapling-verify] preset=${PRESET} samples=${samples.length}\n`
+      `[verify] preset=${PRESET} detector=${DETECTOR} samples=${samples.length}\n`
     );
   }
 
@@ -167,10 +248,10 @@ async function main() {
 
     if (output) {
       try {
-        aiPct = await saplingScore(output);
+        aiPct = await detectorScore(output);
       } catch (e) {
         detectorErrors += 1;
-        err = `sapling: ${e.message || e}`;
+        err = `${DETECTOR}: ${e.message || e}`;
       }
     }
 
@@ -196,7 +277,7 @@ async function main() {
   const scored = perSample.filter((r) => typeof r.aiPct === "number");
   if (scored.length === 0) {
     console.error(
-      `\n[sapling-verify] no scored samples. humanize errors: ${humanizeErrors}, detector errors: ${detectorErrors}`
+      `\n[verify] no scored samples. humanize errors: ${humanizeErrors}, detector errors: ${detectorErrors}`
     );
     process.exit(2);
   }
@@ -211,13 +292,14 @@ async function main() {
   if (SAVE) {
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
     await fs.mkdir(RUNS_DIR, { recursive: true });
-    const outPath = path.join(RUNS_DIR, `${ts}-${PRESET}.json`);
+    const outPath = path.join(RUNS_DIR, `${ts}-${PRESET}-${DETECTOR}.json`);
     await fs.writeFile(
       outPath,
       JSON.stringify(
         {
           timestamp: ts,
           preset: PRESET,
+          detector: DETECTOR,
           samplesScored: scored.length,
           samplesTotal: samples.length,
           meanAiPct: +mean.toFixed(2),
@@ -232,19 +314,19 @@ async function main() {
     );
     if (!QUIET) {
       process.stderr.write(
-        `[sapling-verify] wrote ${path.relative(ROOT, outPath)}\n`
+        `[verify] wrote ${path.relative(ROOT, outPath)}\n`
       );
     }
   }
 
   if (!QUIET) {
     process.stderr.write(
-      `[sapling-verify] mean=${mean.toFixed(2)}% scored=${scored.length}/${samples.length}\n`
+      `[verify] mean=${mean.toFixed(2)}% scored=${scored.length}/${samples.length}\n`
     );
   }
 }
 
 main().catch((err) => {
-  console.error(`[sapling-verify] fatal: ${err.message || err}`);
+  console.error(`[verify] fatal: ${err.message || err}`);
   process.exit(2);
 });

@@ -1,0 +1,6 @@
+iter	ts	preset	metric	value	delta	keep	commit	notes
+0	2026-05-18T19-31	chain	swsim	30.97	—	baseline	af70014	production default, 100% Copyleaks AI confirmed earlier
+0	2026-05-18T19-31	stealth	swsim	22.73	—	baseline	af70014	style-anchor, 100% Copyleaks AI confirmed
+0	2026-05-18T19-32	stealth-verbose	swsim	32.74	—	baseline	af70014	v1 verbose, 100% Copyleaks AI confirmed
+0	2026-05-18T19-33	stealth-verbose-v2	swsim	30.09	—	baseline	af70014	v2 trailer fix, Copyleaks not yet tested
+0	2026-05-18T19-37	stealth-sentence	swsim	22.36	—	baseline	af70014	per-sentence alternates, Copyleaks not yet tested — BEST baseline
