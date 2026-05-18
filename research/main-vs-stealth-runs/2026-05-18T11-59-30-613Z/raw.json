@@ -1,0 +1,422 @@
+[
+  {
+    "id": "corpus-01-academic-essay",
+    "source": "ai-test-corpus",
+    "inputWordCount": 167,
+    "stealth-verbose": {
+      "ok": false,
+      "error": "All free-tier Gemini models unavailable (rate-limited or overloaded).\nTried: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-flash-lite-latest, gemini-flash-latest, gemini-2.0-flash-lite, gemini-2.0-flash\nLast error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\nPlease retry in 51.947808561s. [{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}},{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}},{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\",\"quotaId\":\"GenerateContentInputTokensPerModelPerMinute-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"51s\"}]\nQuotas reset at midnight Pacific time. Overload usually clears in a few minutes."
+    }
+  },
+  {
+    "id": "corpus-02-business-copy",
+    "source": "ai-test-corpus",
+    "inputWordCount": 148,
+    "stealth-verbose": {
+      "ms": 4054,
+      "ok": true,
+      "quality": {
+        "readability": 36,
+        "repetition": 72,
+        "genericPhrasing": 0,
+        "sentenceVariety": 89,
+        "specificity": 80,
+        "meaningRetention": 50,
+        "lengthFit": 0,
+        "structureFit": 100,
+        "overall": 48,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 228,
+      "lenRetention": 1.541,
+      "triggerHits": 4,
+      "triggerDensity": 17.54,
+      "triggerTopHits": {
+        "comprehensive": 1,
+        "streamline": 1,
+        "ensure": 1,
+        "transformative": 1
+      },
+      "burstinessCV": 0.205,
+      "burstinessMean": 38,
+      "remainingSwaps": 9,
+      "mattr": 0.86
+    }
+  },
+  {
+    "id": "corpus-03-tech-explainer",
+    "source": "ai-test-corpus",
+    "inputWordCount": 173,
+    "stealth-verbose": {
+      "ms": 4312,
+      "ok": true,
+      "quality": {
+        "readability": 39,
+        "repetition": 57,
+        "genericPhrasing": 100,
+        "sentenceVariety": 94,
+        "specificity": 80,
+        "meaningRetention": 0,
+        "lengthFit": 0,
+        "structureFit": 73,
+        "overall": 54,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "The rewrite changed the source structure too much.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 323,
+      "lenRetention": 1.867,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.325,
+      "burstinessMean": 32.3,
+      "remainingSwaps": 0,
+      "mattr": 0.856
+    }
+  },
+  {
+    "id": "corpus-04-casual-blog",
+    "source": "ai-test-corpus",
+    "inputWordCount": 163,
+    "stealth-verbose": {
+      "ms": 2927,
+      "ok": true,
+      "quality": {
+        "readability": 63,
+        "repetition": 72,
+        "genericPhrasing": 12,
+        "sentenceVariety": 94,
+        "specificity": 72,
+        "meaningRetention": 69,
+        "lengthFit": 12,
+        "structureFit": 100,
+        "overall": 58,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears: whether you're X or Y.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 228,
+      "lenRetention": 1.399,
+      "triggerHits": 2,
+      "triggerDensity": 8.77,
+      "triggerTopHits": {
+        "furthermore": 1,
+        "essential": 1
+      },
+      "burstinessCV": 0.386,
+      "burstinessMean": 28.5,
+      "remainingSwaps": 12,
+      "mattr": 0.822
+    }
+  },
+  {
+    "id": "corpus-05-product-description",
+    "source": "ai-test-corpus",
+    "inputWordCount": 169,
+    "stealth-verbose": {
+      "ms": 3488,
+      "ok": true,
+      "quality": {
+        "readability": 10,
+        "repetition": 63,
+        "genericPhrasing": 0,
+        "sentenceVariety": 89,
+        "specificity": 74,
+        "meaningRetention": 60,
+        "lengthFit": 0,
+        "structureFit": 100,
+        "overall": 45,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 258,
+      "lenRetention": 1.527,
+      "triggerHits": 3,
+      "triggerDensity": 11.63,
+      "triggerTopHits": {
+        "comprehensive": 1,
+        "robust": 1,
+        "holistic": 1
+      },
+      "burstinessCV": 0.178,
+      "burstinessMean": 43,
+      "remainingSwaps": 11,
+      "mattr": 0.789
+    }
+  },
+  {
+    "id": "phrase-pair-01-adapt-financial",
+    "source": "phrase-chase",
+    "inputWordCount": 66,
+    "stealth-verbose": {
+      "ms": 15847,
+      "ok": true,
+      "quality": {
+        "readability": 71,
+        "repetition": 87,
+        "genericPhrasing": 56,
+        "sentenceVariety": 84,
+        "specificity": 76,
+        "meaningRetention": 40,
+        "lengthFit": 0,
+        "structureFit": 82,
+        "overall": 60,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 172,
+      "lenRetention": 2.606,
+      "triggerHits": 1,
+      "triggerDensity": 5.81,
+      "triggerTopHits": {
+        "ultimately": 1
+      },
+      "burstinessCV": 0.163,
+      "burstinessMean": 28.67,
+      "remainingSwaps": 1,
+      "mattr": 0.831
+    }
+  },
+  {
+    "id": "phrase-pair-02-academic-essay",
+    "source": "phrase-chase",
+    "inputWordCount": 167,
+    "stealth-verbose": {
+      "ms": 7971,
+      "ok": true,
+      "quality": {
+        "readability": 4,
+        "repetition": 49,
+        "genericPhrasing": 56,
+        "sentenceVariety": 88,
+        "specificity": 75,
+        "meaningRetention": 0,
+        "lengthFit": 0,
+        "structureFit": 91,
+        "overall": 42,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 336,
+      "lenRetention": 2.012,
+      "triggerHits": 3,
+      "triggerDensity": 8.93,
+      "triggerTopHits": {
+        "moreover": 1,
+        "intricate": 1,
+        "significant": 1
+      },
+      "burstinessCV": 0.291,
+      "burstinessMean": 42,
+      "remainingSwaps": 2,
+      "mattr": 0.858
+    }
+  },
+  {
+    "id": "phrase-pair-03-business-copy",
+    "source": "phrase-chase",
+    "inputWordCount": 148,
+    "stealth-verbose": {
+      "ms": 8608,
+      "ok": true,
+      "quality": {
+        "readability": 53,
+        "repetition": 76,
+        "genericPhrasing": 0,
+        "sentenceVariety": 91,
+        "specificity": 82,
+        "meaningRetention": 67,
+        "lengthFit": 20,
+        "structureFit": 100,
+        "overall": 56,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 202,
+      "lenRetention": 1.365,
+      "triggerHits": 5,
+      "triggerDensity": 24.75,
+      "triggerTopHits": {
+        "comprehensive": 1,
+        "leverage": 1,
+        "streamline": 1,
+        "ensure": 1,
+        "transformative": 1
+      },
+      "burstinessCV": 0.245,
+      "burstinessMean": 33.67,
+      "remainingSwaps": 9,
+      "mattr": 0.881
+    }
+  },
+  {
+    "id": "phrase-pair-04-tech-explainer",
+    "source": "phrase-chase",
+    "inputWordCount": 173,
+    "stealth-verbose": {
+      "ms": 14016,
+      "ok": true,
+      "quality": {
+        "readability": 12,
+        "repetition": 81,
+        "genericPhrasing": 0,
+        "sentenceVariety": 76,
+        "specificity": 72,
+        "meaningRetention": 59,
+        "lengthFit": 0,
+        "structureFit": 100,
+        "overall": 46,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Generic phrasing still appears: pressing concern, one of the most pressing concerns, threat landscape, malicious actors, technical safeguards, technical tools alone, AI-powered threats.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 266,
+      "lenRetention": 1.538,
+      "triggerHits": 6,
+      "triggerDensity": 22.56,
+      "triggerTopHits": {
+        "comprehensive": 1,
+        "robust": 1,
+        "landscape": 1,
+        "multifaceted": 1,
+        "crucial": 1,
+        "significant": 1
+      },
+      "burstinessCV": 0.072,
+      "burstinessMean": 38,
+      "remainingSwaps": 14,
+      "mattr": 0.878
+    }
+  },
+  {
+    "id": "phrase-pair-05-casual-blog",
+    "source": "phrase-chase",
+    "inputWordCount": 163,
+    "stealth-verbose": {
+      "ms": 12081,
+      "ok": true,
+      "quality": {
+        "readability": 2,
+        "repetition": 65,
+        "genericPhrasing": 12,
+        "sentenceVariety": 100,
+        "specificity": 78,
+        "meaningRetention": 0,
+        "lengthFit": 0,
+        "structureFit": 100,
+        "overall": 38,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 343,
+      "lenRetention": 2.104,
+      "triggerHits": 4,
+      "triggerDensity": 11.66,
+      "triggerTopHits": {
+        "furthermore": 1,
+        "moreover": 1,
+        "endeavor": 1,
+        "vital": 1
+      },
+      "burstinessCV": 0.338,
+      "burstinessMean": 42.88,
+      "remainingSwaps": 4,
+      "mattr": 0.828
+    }
+  },
+  {
+    "id": "phrase-pair-06-product-description",
+    "source": "phrase-chase",
+    "inputWordCount": 169,
+    "stealth-verbose": {
+      "ms": 63335,
+      "ok": true,
+      "quality": {
+        "readability": 50,
+        "repetition": 74,
+        "genericPhrasing": 0,
+        "sentenceVariety": 99,
+        "specificity": 72,
+        "meaningRetention": 56,
+        "lengthFit": 2,
+        "structureFit": 91,
+        "overall": 51,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears: whether you're X or Y.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 244,
+      "lenRetention": 1.444,
+      "triggerHits": 3,
+      "triggerDensity": 12.3,
+      "triggerTopHits": {
+        "moreover": 1,
+        "holistic": 1,
+        "seamless": 1
+      },
+      "burstinessCV": 0.243,
+      "burstinessMean": 34.86,
+      "remainingSwaps": 8,
+      "mattr": 0.792
+    }
+  }
+]

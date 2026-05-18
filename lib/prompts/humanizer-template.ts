@@ -17,7 +17,8 @@ export type HumanizerModelPreset =
   | "minimax-deep"
   | "chain"
   | "chain-strict"
-  | "stealth";
+  | "stealth"
+  | "stealth-verbose";
 
 export const CONTENT_MODES: Array<{
   id: HumanizerContentMode;
@@ -116,6 +117,13 @@ export const MODEL_PRESETS: Array<{
     short: "Copyleaks-tested human voice",
     description:
       "Rewrites using a real human writing sample as a style target. Tested against Copyleaks with clean 'All Clear' results.",
+  },
+  {
+    id: "stealth-verbose",
+    label: "Verbose Paraphrase",
+    short: "StealthWriter-style anti-concision (Copyleaks-targeted)",
+    description:
+      "Single-call Gemini Flash rewrite using explicit anti-concision rules reverse-engineered from StealthWriter outputs that scored 0% AI on Copyleaks. Lowers information density and adds qualifier-heavy phrasing.",
   },
 ];
 

@@ -6,6 +6,7 @@ import {
   selectAnchor,
   buildHybridStylePrompt,
 } from "./humanizer-style-anchor";
+import { buildVerbosePrompt } from "./humanizer-verbose-prompt";
 import {
   buildCandidateSetPrompt,
   buildChainHop1Prompt,
@@ -87,6 +88,12 @@ const PRESET_MODELS: Record<
     rewriteModel: "gemini-2.5-flash",
     temperatures: [0.95],
     label: "Style Anchor (Copyleaks-tested)",
+    hopTimeoutMs: 30000,
+  },
+  "stealth-verbose": {
+    rewriteModel: "gemini-2.5-flash",
+    temperatures: [0.9],
+    label: "Verbose Paraphrase (StealthWriter-style)",
     hopTimeoutMs: 30000,
   },
 };
@@ -1821,6 +1828,34 @@ export async function humanize({
   if (modelPreset === "stealth") {
     const anchor = selectAnchor(trimmed);
     const prompt = buildHybridStylePrompt(trimmed, anchor);
+    const raw = await generate({
+      apiKey,
+      prompt,
+      preferredModel: preset.rewriteModel,
+      temperature: preset.temperatures[0],
+      timeoutMs: preset.hopTimeoutMs ?? 30000,
+    });
+    const output = clean(raw);
+    const quality = scoreQuality(trimmed, output);
+    return {
+      output,
+      pass1Output: output,
+      contentMode,
+      referenceStyle,
+      modelPreset,
+      originalWordCount,
+      outputWordCount: wordCount(output),
+      passes: 1,
+      candidateCount: 1,
+      quality,
+    };
+  }
+
+  // Stealth-verbose preset: anti-concision paraphrase modeled on StealthWriter
+  // outputs that scored 0% AI on Copyleaks. Single Gemini Flash call with an
+  // explicit rules prompt.
+  if (modelPreset === "stealth-verbose") {
+    const prompt = buildVerbosePrompt(trimmed);
     const raw = await generate({
       apiKey,
       prompt,

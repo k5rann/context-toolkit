@@ -53,8 +53,8 @@ function flag(name, fallback) {
 const LIMIT = Number(flag("--limit", "0")) || 0;
 const ONLY = flag("--only", "");
 const PRESETS = ONLY
-  ? [ONLY]
-  : ["chain", "stealth"];
+  ? ONLY.split(",")
+  : ["chain", "stealth", "stealth-verbose"];
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_KEY) {
