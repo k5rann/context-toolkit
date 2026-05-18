@@ -35,6 +35,8 @@ const SENTENCE_REWRITE_PROMPT = (sentence: string) => `Rewrite this single sente
 DO NOT USE any of these AI-flagged words in any rewrite — find natural alternatives:
 delve, tapestry, furthermore, moreover, comprehensive, leverage, streamline, robust, ultimately, navigate, landscape, realm, myriad, intricate, multifaceted, paradigm, synergy, seamless, pivotal, transformative, additionally, in conclusion, nuanced, holistic.
 
+VOCABULARY RULE: do NOT replace key terms with synonyms. If the input uses the same word multiple times (e.g., "system", "data", "user"), reuse THAT word in your rewrites rather than swapping to synonyms. Real human writers repeat terms naturally; over-varied vocabulary is an AI tell.
+
 ORIGINAL SENTENCE:
 ${sentence}
 
