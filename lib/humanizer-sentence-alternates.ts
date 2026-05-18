@@ -30,7 +30,7 @@ export interface ProcessedSentence {
   selected: string; // top-ranked alternative
 }
 
-const SENTENCE_REWRITE_PROMPT = (sentence: string) => `Rewrite this single sentence in three different ways. Each rewrite must preserve every factual claim and named entity. Each rewrite should be 22-28 words long (the natural human range for prose in this register). The three versions should differ in how aggressively they restructure the sentence — heavy rewrite that uses different phrasing entirely, medium rewrite that keeps some original phrasing, and light rewrite that only swaps a few words. Output exactly three lines. No numbering, no labels, no commentary. One rewrite per line.
+const SENTENCE_REWRITE_PROMPT = (sentence: string) => `Rewrite this single sentence in three different ways. Each rewrite must preserve every factual claim and named entity. The three versions should differ in how aggressively they restructure the sentence — heavy rewrite that uses different phrasing entirely, medium rewrite that keeps some original phrasing, and light rewrite that only swaps a few words. Output exactly three lines. No numbering, no labels, no commentary. One rewrite per line.
 
 DO NOT USE any of these AI-flagged words in any rewrite — find natural alternatives:
 delve, tapestry, furthermore, moreover, comprehensive, leverage, streamline, robust, ultimately, navigate, landscape, realm, myriad, intricate, multifaceted, paradigm, synergy, seamless, pivotal, transformative, additionally, in conclusion, nuanced, holistic.
