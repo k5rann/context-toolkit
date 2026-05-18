@@ -3,4 +3,11 @@ iter	ts	preset	metric	value	delta	keep	commit	notes
 0	2026-05-18T19-31	stealth	swsim	22.73	—	baseline	af70014	style-anchor, 100% Copyleaks AI confirmed
 0	2026-05-18T19-32	stealth-verbose	swsim	32.74	—	baseline	af70014	v1 verbose, 100% Copyleaks AI confirmed
 0	2026-05-18T19-33	stealth-verbose-v2	swsim	30.09	—	baseline	af70014	v2 trailer fix, Copyleaks not yet tested
-0	2026-05-18T19-37	stealth-sentence	swsim	22.36	—	baseline	af70014	per-sentence alternates, Copyleaks not yet tested — BEST baseline
+0	2026-05-18T19-37	stealth-sentence	swsim	22.36	—	baseline	af70014	per-sentence alternates, gemini-flash, BEST baseline
+1	2026-05-18T19-39	stealth-sentence	swsim	23.45	+1.09	discard	73c539a	pick medium rank instead of heaviest — wrong direction
+2	2026-05-18T19-42	stealth-sentence	swsim	20.79	-1.57	KEEP	27e1869	add 24-word forbidden trigger list to prompt
+3	2026-05-18T19-44	stealth-sentence	swsim	23.52	+2.73	discard	11e1b6a	expand forbidden list to 49 words — too many constraints
+4	2026-05-18T19-47	stealth-sentence	swsim	22.79	+2.00	discard	3562f8f	add vocab-reuse instruction — backfired
+5	2026-05-18T19-48	stealth-sentence	swsim	25.03	+4.24	discard	(reverted)	add 22-28 word target — model padded with filler
+6	2026-05-18T19-50	stealth-sentence	swsim	24.50	+3.71	discard	(reverted)	swap rewrite model to claude-3.5-haiku
+7	2026-05-18T19-52	stealth-sentence	swsim	19.40	-1.39	KEEP	(current)	swap rewrite model to gpt-4o-mini
