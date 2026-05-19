@@ -45,7 +45,11 @@ const PRESET_MODELS: Record<
     rewriteModel: "meta-llama/llama-3.3-70b-instruct",
     refineModel: "deepseek/deepseek-v4-flash",
     fallbackModels: [
-      "qwen/qwen-2.5-72b-instruct",
+      // qwen/qwen-2.5-72b-instruct removed 2026-05-19: OpenRouter returns
+      // {"error":{"message":"Provider returned error","code":400}} on every
+      // request. Was the first-tried fallback, so any primary stumble cascaded
+      // into an immediate user-facing failure. Confirmed broken via direct
+      // OpenRouter probe. Other fallback models all return 200.
       "google/gemini-2.5-flash",
       "anthropic/claude-3.5-haiku",
       "openai/gpt-4o-mini",
@@ -64,7 +68,11 @@ const PRESET_MODELS: Record<
     rewriteModel: "meta-llama/llama-3.3-70b-instruct",
     refineModel: "deepseek/deepseek-v4-flash",
     fallbackModels: [
-      "qwen/qwen-2.5-72b-instruct",
+      // qwen/qwen-2.5-72b-instruct removed 2026-05-19: OpenRouter returns
+      // {"error":{"message":"Provider returned error","code":400}} on every
+      // request. Was the first-tried fallback, so any primary stumble cascaded
+      // into an immediate user-facing failure. Confirmed broken via direct
+      // OpenRouter probe. Other fallback models all return 200.
       "google/gemini-2.5-flash",
       "anthropic/claude-3.5-haiku",
       "openai/gpt-4o-mini",
