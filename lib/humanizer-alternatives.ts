@@ -200,12 +200,15 @@ export async function generateAlternatives({
 
   // Full-doc rewrite uses Llama 70B via OpenRouter + casual anchor.
   // ADVERSARIAL SAMPLING: generate 3 variants at different temperatures,
-  // score each with local human-likeness heuristic, pick the best.
-  // Llama had lowest AI phrase count (3) in model shootout testing.
+  // score each with local human-likeness heuristic, pick the best,
+  // then run hop-2 through DeepSeek to mix model fingerprints.
   const stealthAnchor = getAnchorById("casual-forum") ?? anchor;
   const orKey = process.env.OPENROUTER_API_KEY ?? "";
   const stealthModel = "meta-llama/llama-3.1-70b-instruct";
-  const stealthTemps = [1.0, 1.15, 1.3];
+  const hop2Model = "deepseek/deepseek-chat";
+  // 5 temperature points for richer adversarial pool. All run in parallel
+  // so wall-clock latency is unchanged from 3 variants — just more API calls.
+  const stealthTemps = [0.95, 1.05, 1.15, 1.25, 1.35];
   const fullDocPromise = (async () => {
     try {
       const fullPrompt = buildStealthPrompt(obfuscatedText, stealthAnchor);
@@ -233,9 +236,43 @@ export async function generateAlternatives({
       );
       if (valid.length === 0) return null;
 
-      // Highest score wins
       valid.sort((a, b) => b.score - a.score);
-      return splitSentences(valid[0].text);
+      const hop1Output = valid[0].text;
+
+      // HOP 2: feed Llama's best variant through DeepSeek for fingerprint mixing.
+      // Each model family leaves different statistical artifacts; layering two
+      // models scrambles those artifacts so detectors can't identify either.
+      try {
+        const hop2Prompt = `Take this passage and rewrite it in your own words. Keep every fact and number exactly the same. Make it sound like a real person talking, not polished writing. Don't use em-dashes, fancy transition words like "furthermore", or formal phrases. Use contractions. Mix short and long sentences. Don't summarize or shorten — match the input length.
+
+---
+${hop1Output}
+---
+
+Rewritten:`;
+        const hop2Raw = await generate({
+          apiKey: orKey || apiKey,
+          prompt: hop2Prompt,
+          preferredModel: hop2Model,
+          temperature: 1.0,
+          timeoutMs: 45000,
+        });
+        const hop2Clean = stripPreamble(hop2Raw);
+        // Only use hop-2 if it's a reasonable length (not too short, not too long)
+        const lenRatio = hop2Clean.length / hop1Output.length;
+        if (hop2Clean.length > 50 && lenRatio > 0.5 && lenRatio < 2.0) {
+          // Score hop-2 vs hop-1, take whichever scores higher
+          const hop2Score = scoreHumanness(hop2Clean).total;
+          const hop1Score = valid[0].score;
+          if (hop2Score > hop1Score) {
+            return splitSentences(hop2Clean);
+          }
+        }
+      } catch {
+        // Fall through to hop-1 output
+      }
+
+      return splitSentences(hop1Output);
     } catch {
       return null;
     }
