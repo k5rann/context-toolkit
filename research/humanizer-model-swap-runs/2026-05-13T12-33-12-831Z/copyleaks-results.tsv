@@ -1,0 +1,10 @@
+sample_id	sample_category	route_id	route_label	model	input_words	output_words	passes	leak_detected	copyleaks_ai_pct	copyleaks_ai_phrases	notes
+ai-generic-essay	generic essay	current-chain	Current app chain	Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct	165	135	2	no			
+ai-generic-essay	generic essay	deepseek-v4	DeepSeek direct	deepseek/deepseek-v4-flash	165	119	1	no			
+ai-generic-essay	generic essay	minimax-free	MiniMax direct	minimax/minimax-m2.5:free	165	146	1	no			
+cybersecurity-explainer	cybersecurity	current-chain	Current app chain	Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct	152	140	2	no			
+cybersecurity-explainer	cybersecurity	deepseek-v4	DeepSeek direct	deepseek/deepseek-v4-flash	152	98	1	no			
+cybersecurity-explainer	cybersecurity	minimax-free	MiniMax direct	minimax/minimax-m2.5:free	152	132	1	no			
+business-about-copy	business copy	current-chain	Current app chain	Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct	130	109	2	no			
+business-about-copy	business copy	deepseek-v4	DeepSeek direct	deepseek/deepseek-v4-flash	130	94	1	no			
+business-about-copy	business copy	minimax-free	MiniMax direct	minimax/minimax-m2.5:free	130	0	0	no			ERROR: OpenRouter request timed out after 60s. Free-tier model may be slow or overloaded; try a different mode or retry in a moment.

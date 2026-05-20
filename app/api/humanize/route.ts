@@ -31,6 +31,7 @@ const VALID_CONTENT_MODES: HumanizerContentMode[] = [
 const VALID_MODEL_PRESETS: HumanizerModelPreset[] = [
   "chain",
   "chain-strict",
+  "stealth",
 ];
 const VALID_REFERENCE_STYLES = REFERENCE_STYLES.map((style) => style.id);
 

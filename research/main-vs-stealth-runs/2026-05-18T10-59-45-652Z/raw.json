@@ -1,0 +1,78 @@
+[
+  {
+    "id": "corpus-01-academic-essay",
+    "source": "ai-test-corpus",
+    "inputWordCount": 167,
+    "chain": {
+      "ms": 24355,
+      "ok": true,
+      "quality": {
+        "readability": 99,
+        "repetition": 87,
+        "genericPhrasing": 56,
+        "sentenceVariety": 85,
+        "specificity": 64,
+        "meaningRetention": 19,
+        "lengthFit": 26,
+        "structureFit": 81,
+        "overall": 62,
+        "unsupportedAdditions": [],
+        "notes": [
+          "Generator: meta-llama/llama-3.3-70b-instruct → qwen/qwen-2.5-72b-instruct",
+          "Mode: Chain (Llama→DeepSeek)",
+          "Chain: 2 hops completed (mandatory)",
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "Generic phrasing still appears in the draft.",
+          "Concrete details are thin; add them to the draft if the rewrite feels too general.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 111,
+      "lenRetention": 0.665,
+      "triggerHits": 3,
+      "triggerDensity": 27.03,
+      "triggerTopHits": {
+        "crucial": 1,
+        "significant": 1,
+        "transformative": 1
+      },
+      "burstinessCV": 0.361,
+      "burstinessMean": 18.5,
+      "remainingSwaps": 1,
+      "mattr": 0.906
+    },
+    "stealth": {
+      "ms": 23710,
+      "ok": true,
+      "quality": {
+        "readability": 75,
+        "repetition": 55,
+        "genericPhrasing": 78,
+        "sentenceVariety": 46,
+        "specificity": 76,
+        "meaningRetention": 0,
+        "lengthFit": 41,
+        "structureFit": 35,
+        "overall": 51,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite compressed too much; preserve more of the original substance.",
+          "The rewrite changed the source structure too much.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Sentence rhythm is still a bit uniform.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 122,
+      "lenRetention": 0.731,
+      "triggerHits": 0,
+      "triggerDensity": 0,
+      "triggerTopHits": {},
+      "burstinessCV": 0.355,
+      "burstinessMean": 5.55,
+      "remainingSwaps": 0,
+      "mattr": 0.868
+    }
+  }
+]

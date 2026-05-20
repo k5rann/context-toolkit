@@ -1,0 +1,429 @@
+{
+  "timestamp": "2026-05-18T19-39-43-830Z",
+  "preset": "stealth-sentence",
+  "metric": "sw-similarity-distance",
+  "swReference": {
+    "count": 6,
+    "avg": {
+      "burstinessCV": 0.2828237729863109,
+      "mattr": 0.8547194043099186,
+      "meanSenLen": 24.78670634920635,
+      "lengthRatio": 1.0613871970407522,
+      "triggerDensity": 4.749460759913721,
+      "fnFreq": {
+        "the": 0.052990348108264584,
+        "and": 0.04528394276580034,
+        "of": 0.01648147467592192,
+        "to": 0.033964643128150465,
+        "in": 0.018782050237199286,
+        "a": 0.027502399219782606,
+        "is": 0.017616245599112058,
+        "that": 0.00953357356425774,
+        "for": 0.014116448193443779,
+        "it": 0.006654363698074855
+      }
+    }
+  },
+  "samplesScored": 11,
+  "samplesTotal": 11,
+  "meanDistance": 23.45,
+  "humanizeErrors": 0,
+  "perSample": [
+    {
+      "id": "corpus-01-academic-essay",
+      "source": "ai-test-corpus",
+      "inputWords": 167,
+      "outputWords": 147,
+      "distance": 29.3,
+      "components": {
+        "burst": 1.62,
+        "mattr": 8.77,
+        "senLen": 3.5,
+        "fn": 3.61,
+        "len": 1.8,
+        "trig": 10
+      },
+      "fp": {
+        "burstinessCV": 0.25696898951780733,
+        "mattr": 0.9423999999999999,
+        "meanSenLen": 21.285714285714285,
+        "fnFreq": {
+          "the": 0.03355704697986577,
+          "and": 0.040268456375838924,
+          "of": 0.026845637583892617,
+          "to": 0.020134228187919462,
+          "in": 0.006711409395973154,
+          "a": 0.006711409395973154,
+          "is": 0.013422818791946308,
+          "that": 0.013422818791946308,
+          "for": 0.013422818791946308,
+          "it": 0.006711409395973154
+        },
+        "lengthRatio": 0.8816568047337278,
+        "triggerDensity": 26.845637583892618
+      },
+      "ms": 3954,
+      "err": null
+    },
+    {
+      "id": "corpus-02-business-copy",
+      "source": "ai-test-corpus",
+      "inputWords": 148,
+      "outputWords": 137,
+      "distance": 29.8,
+      "components": {
+        "burst": 6.74,
+        "mattr": 5.98,
+        "senLen": 1.29,
+        "fn": 4.45,
+        "len": 1.34,
+        "trig": 10
+      },
+      "fp": {
+        "burstinessCV": 0.17502074722344774,
+        "mattr": 0.9145652173913045,
+        "meanSenLen": 23.5,
+        "fnFreq": {
+          "the": 0.014184397163120567,
+          "and": 0.0425531914893617,
+          "of": 0,
+          "to": 0.0425531914893617,
+          "in": 0,
+          "a": 0.02127659574468085,
+          "is": 0.0070921985815602835,
+          "that": 0.0070921985815602835,
+          "for": 0.014184397163120567,
+          "it": 0
+        },
+        "lengthRatio": 0.9276315789473685,
+        "triggerDensity": 21.27659574468085
+      },
+      "ms": 3757,
+      "err": null
+    },
+    {
+      "id": "corpus-03-tech-explainer",
+      "source": "ai-test-corpus",
+      "inputWords": 173,
+      "outputWords": 172,
+      "distance": 31.4,
+      "components": {
+        "burst": 8.44,
+        "mattr": 7.25,
+        "senLen": 0.07,
+        "fn": 4.96,
+        "len": 0.67,
+        "trig": 10
+      },
+      "fp": {
+        "burstinessCV": 0.14782325841091815,
+        "mattr": 0.9272580645161279,
+        "meanSenLen": 24.714285714285715,
+        "fnFreq": {
+          "the": 0.017341040462427744,
+          "and": 0.028901734104046242,
+          "of": 0.011560693641618497,
+          "to": 0.05202312138728324,
+          "in": 0.011560693641618497,
+          "a": 0.03468208092485549,
+          "is": 0,
+          "that": 0.011560693641618497,
+          "for": 0.005780346820809248,
+          "it": 0
+        },
+        "lengthRatio": 0.9942528735632183,
+        "triggerDensity": 23.12138728323699
+      },
+      "ms": 4118,
+      "err": null
+    },
+    {
+      "id": "corpus-04-casual-blog",
+      "source": "ai-test-corpus",
+      "inputWords": 163,
+      "outputWords": 163,
+      "distance": 11.71,
+      "components": {
+        "burst": 1.35,
+        "mattr": 1.68,
+        "senLen": 3.66,
+        "fn": 3.63,
+        "len": 0.61,
+        "trig": 0.78
+      },
+      "fp": {
+        "burstinessCV": 0.3044319756072559,
+        "mattr": 0.8715000000000008,
+        "meanSenLen": 21.125,
+        "fnFreq": {
+          "the": 0.029585798816568046,
+          "and": 0.05325443786982249,
+          "of": 0.011834319526627219,
+          "to": 0.029585798816568046,
+          "in": 0.005917159763313609,
+          "a": 0.023668639053254437,
+          "is": 0.023668639053254437,
+          "that": 0.023668639053254437,
+          "for": 0.005917159763313609,
+          "it": 0.011834319526627219
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 5.9171597633136095
+      },
+      "ms": 4446,
+      "err": null
+    },
+    {
+      "id": "corpus-05-product-description",
+      "source": "ai-test-corpus",
+      "inputWords": 169,
+      "outputWords": 169,
+      "distance": 19.24,
+      "components": {
+        "burst": 3.01,
+        "mattr": 4.16,
+        "senLen": 4.05,
+        "fn": 2.87,
+        "len": 0.61,
+        "trig": 4.54
+      },
+      "fp": {
+        "burstinessCV": 0.23472763588724802,
+        "mattr": 0.8962903225806451,
+        "meanSenLen": 28.833333333333332,
+        "fnFreq": {
+          "the": 0.057803468208092484,
+          "and": 0.023121387283236993,
+          "of": 0.017341040462427744,
+          "to": 0.03468208092485549,
+          "in": 0,
+          "a": 0.028901734104046242,
+          "is": 0.011560693641618497,
+          "that": 0.005780346820809248,
+          "for": 0.005780346820809248,
+          "it": 0.011560693641618497
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 11.560693641618496
+      },
+      "ms": 4395,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-01-adapt-financial",
+      "source": "phrase-chase",
+      "inputWords": 66,
+      "outputWords": 66,
+      "distance": 22.54,
+      "components": {
+        "burst": 3.83,
+        "mattr": 2.06,
+        "senLen": 8.29,
+        "fn": 4.58,
+        "len": 0.61,
+        "trig": 3.17
+      },
+      "fp": {
+        "burstinessCV": 0.34417626338183477,
+        "mattr": 0.8752941176470589,
+        "meanSenLen": 16.5,
+        "fnFreq": {
+          "the": 0.07575757575757576,
+          "and": 0.045454545454545456,
+          "of": 0,
+          "to": 0,
+          "in": 0.015151515151515152,
+          "a": 0.030303030303030304,
+          "is": 0.015151515151515152,
+          "that": 0,
+          "for": 0,
+          "it": 0.015151515151515152
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 0
+      },
+      "ms": 2207,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-02-academic-essay",
+      "source": "phrase-chase",
+      "inputWords": 167,
+      "outputWords": 167,
+      "distance": 21.08,
+      "components": {
+        "burst": 0.65,
+        "mattr": 4.84,
+        "senLen": 0.64,
+        "fn": 4.32,
+        "len": 0.61,
+        "trig": 10
+      },
+      "fp": {
+        "burstinessCV": 0.2932428803163045,
+        "mattr": 0.9031666666666663,
+        "meanSenLen": 24.142857142857142,
+        "fnFreq": {
+          "the": 0.047337278106508875,
+          "and": 0.03550295857988166,
+          "of": 0.047337278106508875,
+          "to": 0.023668639053254437,
+          "in": 0.011834319526627219,
+          "a": 0.005917159763313609,
+          "is": 0.011834319526627219,
+          "that": 0.01775147928994083,
+          "for": 0.005917159763313609,
+          "it": 0.005917159763313609
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 29.585798816568047
+      },
+      "ms": 4451,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-03-business-copy",
+      "source": "phrase-chase",
+      "inputWords": 148,
+      "outputWords": 148,
+      "distance": 27.82,
+      "components": {
+        "burst": 8.16,
+        "mattr": 4.47,
+        "senLen": 0.55,
+        "fn": 4.04,
+        "len": 0.61,
+        "trig": 9.99
+      },
+      "fp": {
+        "burstinessCV": 0.15231364345776613,
+        "mattr": 0.8994174757281562,
+        "meanSenLen": 25.333333333333332,
+        "fnFreq": {
+          "the": 0.013157894736842105,
+          "and": 0.039473684210526314,
+          "of": 0.013157894736842105,
+          "to": 0.046052631578947366,
+          "in": 0.006578947368421052,
+          "a": 0.013157894736842105,
+          "is": 0.019736842105263157,
+          "that": 0.019736842105263157,
+          "for": 0.013157894736842105,
+          "it": 0.006578947368421052
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 19.736842105263158
+      },
+      "ms": 4146,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-04-tech-explainer",
+      "source": "phrase-chase",
+      "inputWords": 173,
+      "outputWords": 173,
+      "distance": 33.35,
+      "components": {
+        "burst": 10.02,
+        "mattr": 8.64,
+        "senLen": 0.07,
+        "fn": 4,
+        "len": 0.61,
+        "trig": 10
+      },
+      "fp": {
+        "burstinessCV": 0.1224556077739225,
+        "mattr": 0.9411199999999992,
+        "meanSenLen": 24.857142857142858,
+        "fnFreq": {
+          "the": 0.028735632183908046,
+          "and": 0.028735632183908046,
+          "of": 0.022988505747126436,
+          "to": 0.040229885057471264,
+          "in": 0.011494252873563218,
+          "a": 0.022988505747126436,
+          "is": 0,
+          "that": 0.011494252873563218,
+          "for": 0.005747126436781609,
+          "it": 0
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 22.988505747126435
+      },
+      "ms": 4424,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-05-casual-blog",
+      "source": "phrase-chase",
+      "inputWords": 163,
+      "outputWords": 163,
+      "distance": 11.71,
+      "components": {
+        "burst": 1.35,
+        "mattr": 1.68,
+        "senLen": 3.66,
+        "fn": 3.63,
+        "len": 0.61,
+        "trig": 0.78
+      },
+      "fp": {
+        "burstinessCV": 0.3044319756072559,
+        "mattr": 0.8715000000000008,
+        "meanSenLen": 21.125,
+        "fnFreq": {
+          "the": 0.029585798816568046,
+          "and": 0.05325443786982249,
+          "of": 0.011834319526627219,
+          "to": 0.029585798816568046,
+          "in": 0.005917159763313609,
+          "a": 0.023668639053254437,
+          "is": 0.023668639053254437,
+          "that": 0.023668639053254437,
+          "for": 0.005917159763313609,
+          "it": 0.011834319526627219
+        },
+        "lengthRatio": 1,
+        "triggerDensity": 5.9171597633136095
+      },
+      "ms": 8423,
+      "err": null
+    },
+    {
+      "id": "phrase-pair-06-product-description",
+      "source": "phrase-chase",
+      "inputWords": 169,
+      "outputWords": 170,
+      "distance": 19.96,
+      "components": {
+        "burst": 3.54,
+        "mattr": 4.3,
+        "senLen": 4.21,
+        "fn": 2.85,
+        "len": 0.56,
+        "trig": 4.5
+      },
+      "fp": {
+        "burstinessCV": 0.22611856980351724,
+        "mattr": 0.8977599999999999,
+        "meanSenLen": 29,
+        "fnFreq": {
+          "the": 0.05747126436781609,
+          "and": 0.022988505747126436,
+          "of": 0.017241379310344827,
+          "to": 0.034482758620689655,
+          "in": 0,
+          "a": 0.028735632183908046,
+          "is": 0.011494252873563218,
+          "that": 0.005747126436781609,
+          "for": 0.005747126436781609,
+          "it": 0.011494252873563218
+        },
+        "lengthRatio": 1.0057803468208093,
+        "triggerDensity": 11.494252873563218
+      },
+      "ms": 2950,
+      "err": null
+    }
+  ]
+}

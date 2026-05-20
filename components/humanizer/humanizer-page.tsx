@@ -207,10 +207,11 @@ export function HumanizerPage() {
           </div>
 
           <div className="space-y-2">
-            <div className="grid grid-cols-2 rounded-lg border border-border/60 bg-muted/10 p-1">
+            <div className="grid grid-cols-3 rounded-lg border border-border/60 bg-muted/10 p-1">
               {[
                 { id: "chain" as const, label: "Standard" },
-                { id: "chain-strict" as const, label: "Strict (keep all facts)" },
+                { id: "chain-strict" as const, label: "Strict" },
+                { id: "stealth" as const, label: "Stealth" },
               ].map((option) => (
                 <button
                   key={option.id}
@@ -228,7 +229,14 @@ export function HumanizerPage() {
               ))}
             </div>
             <div className="px-1 text-xs text-muted-foreground leading-relaxed">
-              {preset === "chain-strict" ? (
+              {preset === "stealth" ? (
+                <span>
+                  <strong className="text-foreground">Stealth:</strong>{" "}
+                  rewrites using a human voice anchor. Tested clean against
+                  Copyleaks. Output sounds natural but may shift register
+                  toward casual.
+                </span>
+              ) : preset === "chain-strict" ? (
                 <span>
                   <strong className="text-foreground">Strict:</strong> swaps
                   complex words only. Best for{" "}
@@ -257,9 +265,11 @@ export function HumanizerPage() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {preset === "chain-strict"
-                  ? "Rewriting (strict)..."
-                  : "Rewriting..."}
+                {preset === "stealth"
+                  ? "Stealth rewriting..."
+                  : preset === "chain-strict"
+                    ? "Rewriting (strict)..."
+                    : "Rewriting..."}
               </>
             ) : (
               <>

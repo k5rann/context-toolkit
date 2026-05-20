@@ -1,0 +1,41 @@
+[
+  {
+    "id": "corpus-01-academic-essay",
+    "source": "ai-test-corpus",
+    "inputWordCount": 167,
+    "stealth-verbose": {
+      "ms": 11986,
+      "ok": true,
+      "quality": {
+        "readability": 14,
+        "repetition": 57,
+        "genericPhrasing": 56,
+        "sentenceVariety": 94,
+        "specificity": 80,
+        "meaningRetention": 0,
+        "lengthFit": 0,
+        "structureFit": 91,
+        "overall": 45,
+        "unsupportedAdditions": [],
+        "notes": [
+          "The rewrite expanded more than needed; trim unsupported additions.",
+          "Readability could be cleaner.",
+          "Some repeated wording or sentence starts remain.",
+          "Generic phrasing still appears in the draft.",
+          "Meaning retention looks low; compare against the original before using."
+        ]
+      },
+      "wordCount": 328,
+      "lenRetention": 1.964,
+      "triggerHits": 1,
+      "triggerDensity": 3.05,
+      "triggerTopHits": {
+        "significant": 1
+      },
+      "burstinessCV": 0.346,
+      "burstinessMean": 41,
+      "remainingSwaps": 1,
+      "mattr": 0.842
+    }
+  }
+]

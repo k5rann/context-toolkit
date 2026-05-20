@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-05-18T19-17-51-214Z",
+  "preset": "stealth-verbose",
+  "detector": "hf-openai",
+  "samplesScored": 5,
+  "samplesTotal": 5,
+  "meanAiPct": 35.25,
+  "humanizeErrors": 0,
+  "detectorErrors": 0,
+  "perSample": [
+    {
+      "id": "corpus-01-academic-essay",
+      "source": "ai-test-corpus",
+      "inputWords": 167,
+      "outputWords": 235,
+      "aiPct": 0.02,
+      "ms": 3565,
+      "err": null
+    },
+    {
+      "id": "corpus-02-business-copy",
+      "source": "ai-test-corpus",
+      "inputWords": 148,
+      "outputWords": 198,
+      "aiPct": 99.97,
+      "ms": 2282,
+      "err": null
+    },
+    {
+      "id": "corpus-03-tech-explainer",
+      "source": "ai-test-corpus",
+      "inputWords": 173,
+      "outputWords": 221,
+      "aiPct": 12.41,
+      "ms": 2604,
+      "err": null
+    },
+    {
+      "id": "corpus-04-casual-blog",
+      "source": "ai-test-corpus",
+      "inputWords": 163,
+      "outputWords": 239,
+      "aiPct": 0.45,
+      "ms": 3262,
+      "err": null
+    },
+    {
+      "id": "corpus-05-product-description",
+      "source": "ai-test-corpus",
+      "inputWords": 169,
+      "outputWords": 251,
+      "aiPct": 63.38,
+      "ms": 2620,
+      "err": null
+    }
+  ]
+}

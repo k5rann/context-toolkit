@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-05-13T17-57-26-910Z",
+  "preset": "chain",
+  "detector": "gptzero",
+  "humanizeEnabled": false,
+  "results": [
+    {
+      "file": "03-tech-explainer.txt",
+      "baseline": {
+        "error": "gptzero http 401",
+        "aiPct": null
+      },
+      "post": {
+        "aiPct": null,
+        "detector": ""
+      },
+      "delta": null,
+      "humanizeError": null
+    }
+  ]
+}
