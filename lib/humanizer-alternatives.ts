@@ -7,6 +7,10 @@ import {
   type StyleAnchor,
 } from "./humanizer-style-anchor";
 import { postProcess } from "./humanizer-postprocess";
+import {
+  obfuscateTopicPhrases,
+  countPoisonedPhrases,
+} from "./humanizer-topic-obfuscator";
 
 // ── PREAMBLE STRIPPING ────────────────────────────────────────────────
 // LLMs often prefix output with "Here's the rewritten passage:" or similar.
@@ -46,6 +50,10 @@ export interface AlternativesResult {
   model: string;
   /** True when output is under Copyleaks' 350-char minimum */
   tooShort?: boolean;
+  /** How many AI-saturated phrases were detected in the input */
+  poisonedPhrasesDetected?: number;
+  /** How many were actually swapped (some may be in non-obfuscated positions) */
+  poisonedPhrasesSwapped?: number;
 }
 
 const AI_TRIGGER_WORDS = [
@@ -170,8 +178,19 @@ export async function generateAlternatives({
   model?: string;
   temperatures?: number[];
 }): Promise<AlternativesResult> {
-  const anchor = selectAnchor(text, anchorId);
-  const inputSentences = splitSentences(text);
+  // Pre-process: strip topic-saturated phrases that trigger Copyleaks AI
+  // Source Match. The LLM never sees the original loaded n-grams, so it
+  // can't echo them back. This is the key fix for poisoned topics
+  // (cybersecurity, AI, urban planning, etc.).
+  const obfuscationSeed = Date.now() % 1000;
+  const { output: obfuscatedText, swapCount } = obfuscateTopicPhrases(
+    text,
+    obfuscationSeed
+  );
+  const poisonedCount = countPoisonedPhrases(text);
+
+  const anchor = selectAnchor(obfuscatedText, anchorId);
+  const inputSentences = splitSentences(obfuscatedText);
   const variants: Array<"heavy" | "medium" | "light"> = [
     "heavy",
     "medium",
@@ -186,7 +205,7 @@ export async function generateAlternatives({
   const stealthModel = "meta-llama/llama-3.1-70b-instruct";
   const fullDocPromise = (async () => {
     try {
-      const fullPrompt = buildStealthPrompt(text, stealthAnchor);
+      const fullPrompt = buildStealthPrompt(obfuscatedText, stealthAnchor);
       const fullOutput = await generate({
         apiKey: orKey || apiKey,
         prompt: fullPrompt,
@@ -270,8 +289,16 @@ export async function generateAlternatives({
     .map((e) => e.alternatives[0]?.sentence ?? e.original)
     .join(" ");
 
+  // Second pass of topic obfuscation — catches phrases the LLM regenerated
+  // despite the input being scrubbed. Different seed so we don't repeat
+  // the exact same paraphrases from input pre-processing.
+  const { output: scrubbedComposed } = obfuscateTopicPhrases(
+    rawComposed,
+    (obfuscationSeed + 137) % 1000
+  );
+
   // Final post-process pass on the composed output for document-level noise
-  const composedOutput = postProcess(rawComposed, {
+  const composedOutput = postProcess(scrubbedComposed, {
     seed: (Date.now() + 42) % 1000,
     fillers: false, // Already injected at sentence level
     burstiness: true,
@@ -286,6 +313,8 @@ export async function generateAlternatives({
     anchorUsed: anchor.id,
     model,
     tooShort: composedOutput.length < MIN_OUTPUT_CHARS,
+    poisonedPhrasesDetected: poisonedCount,
+    poisonedPhrasesSwapped: swapCount,
   };
 }
 

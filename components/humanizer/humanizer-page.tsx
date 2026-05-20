@@ -102,6 +102,38 @@ export function HumanizerPage() {
     setError(null);
     setResult(null);
     try {
+      // Stealth uses the dedicated alternatives pipeline (Llama 70B full-doc
+      // rewrite + per-sentence variants + post-processing). The chain route
+      // doesn't include any of that, so we redirect to the proven endpoint.
+      if (preset === "stealth") {
+        const res = await fetch("/api/humanize-alternatives", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Rewrite failed");
+          return;
+        }
+        setResult({
+          output: data.composedOutput,
+          contentMode: DEFAULT_CONTENT_MODE,
+          referenceStyle: DEFAULT_REFERENCE_STYLE,
+          modelPreset: "stealth",
+          originalWordCount: text.split(/\s+/).filter(Boolean).length,
+          outputWordCount: (data.composedOutput || "").split(/\s+/).filter(Boolean).length,
+          passes: 2,
+          quality: { facts: 1, readability: 1, originality: 1 },
+        } as unknown as HumanizeResult);
+        if (data.tooShort) {
+          setError(
+            "Output under 350 chars — Copyleaks may not scan it. Try a longer input."
+          );
+        }
+        return;
+      }
+
       const res = await fetch("/api/humanize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
