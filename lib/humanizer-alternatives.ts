@@ -11,6 +11,7 @@ import {
   obfuscateTopicPhrases,
   countPoisonedPhrases,
 } from "./humanizer-topic-obfuscator";
+import { scoreHumanness } from "./humanizer-human-score";
 
 // ── PREAMBLE STRIPPING ────────────────────────────────────────────────
 // LLMs often prefix output with "Here's the rewritten passage:" or similar.
@@ -198,22 +199,43 @@ export async function generateAlternatives({
   ];
 
   // Full-doc rewrite uses Llama 70B via OpenRouter + casual anchor.
+  // ADVERSARIAL SAMPLING: generate 3 variants at different temperatures,
+  // score each with local human-likeness heuristic, pick the best.
   // Llama had lowest AI phrase count (3) in model shootout testing.
-  // OpenRouter key is server-side env var.
   const stealthAnchor = getAnchorById("casual-forum") ?? anchor;
   const orKey = process.env.OPENROUTER_API_KEY ?? "";
   const stealthModel = "meta-llama/llama-3.1-70b-instruct";
+  const stealthTemps = [1.0, 1.15, 1.3];
   const fullDocPromise = (async () => {
     try {
       const fullPrompt = buildStealthPrompt(obfuscatedText, stealthAnchor);
-      const fullOutput = await generate({
-        apiKey: orKey || apiKey,
-        prompt: fullPrompt,
-        preferredModel: stealthModel,
-        temperature: 1.1,
-        timeoutMs: 45000,
-      });
-      return splitSentences(stripPreamble(fullOutput));
+      const candidates = await Promise.all(
+        stealthTemps.map(async (temp) => {
+          try {
+            const raw = await generate({
+              apiKey: orKey || apiKey,
+              prompt: fullPrompt,
+              preferredModel: stealthModel,
+              temperature: temp,
+              timeoutMs: 45000,
+            });
+            const cleaned = stripPreamble(raw);
+            if (cleaned.length < 50) return null;
+            return { text: cleaned, score: scoreHumanness(cleaned).total, temp };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      const valid = candidates.filter(
+        (c): c is { text: string; score: number; temp: number } => c !== null
+      );
+      if (valid.length === 0) return null;
+
+      // Highest score wins
+      valid.sort((a, b) => b.score - a.score);
+      return splitSentences(valid[0].text);
     } catch {
       return null;
     }
