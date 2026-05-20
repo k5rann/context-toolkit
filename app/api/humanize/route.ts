@@ -142,13 +142,27 @@ export async function POST(req: NextRequest) {
     }
 
     const resolvedPreset = resolveModelPreset(modelPreset, legacyIntensity);
-    const apiKey = process.env.OPENROUTER_API_KEY ?? "";
+    // Gemini key is the default apiKey passed to generate(). When the model
+    // is OpenRouter (vendor/model format), generate() automatically swaps to
+    // process.env.OPENROUTER_API_KEY. Passing the OpenRouter key here would
+    // break Gemini calls with "API key not valid".
+    const apiKey = process.env.GEMINI_API_KEY ?? "";
 
     if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
         {
           error:
-            "MiniMax rewriting requires OPENROUTER_API_KEY on the server. Add it in Vercel env vars (or .env.local for dev).",
+            "OPENROUTER_API_KEY is missing on the server. Add it in Vercel env vars (or .env.local for dev).",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        {
+          error:
+            "GEMINI_API_KEY is missing on the server. Add it in Vercel env vars (or .env.local for dev).",
         },
         { status: 500 }
       );
