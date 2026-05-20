@@ -29,8 +29,23 @@ interface PhraseSwap {
 // the same output.
 const POISONED_PHRASES: PhraseSwap[] = [
   // ── URBAN / ENVIRONMENT ─────────────────────────────────────────
+  { pattern: /\bcity planning\b/gi, alternatives: ["how cities get built", "how they design cities", "city design"] },
+  { pattern: /\burban planning\b/gi, alternatives: ["city design", "how cities lay out neighborhoods", "town planning"] },
+  { pattern: /\burban planners?\b/gi, alternatives: ["the people who design cities", "city planners", "the folks running city design"] },
+  { pattern: /\burban (?:areas?|environments?|landscapes?)\b/gi, alternatives: ["cities", "built-up areas", "the urban side"] },
   { pattern: /\burban heat island( effect)?\b/gi, alternatives: ["the way concrete traps heat", "cities turning into ovens", "the heat trap thing cities have"] },
   { pattern: /\bgreen (?:spaces?|infrastructure)\b/gi, alternatives: ["parks and gardens", "green areas", "outdoor patches"] },
+  { pattern: /\bessential (?:component|element|part)\b/gi, alternatives: ["must-have", "key piece", "non-negotiable bit"] },
+  { pattern: /\boffering numerous benefits\b/gi, alternatives: ["doing a lot of good", "helping in lots of ways", "with tons of upsides"] },
+  { pattern: /\bnumerous benefits\b/gi, alternatives: ["lots of upsides", "tons of perks", "all kinds of good stuff"] },
+  { pattern: /\bresidents and the environment\b/gi, alternatives: ["people and the planet", "locals and nature", "the folks living there and the surroundings"] },
+  { pattern: /\bcitizens\b/gi, alternatives: ["people", "folks", "everyone"] },
+  { pattern: /\bstrategically designed\b/gi, alternatives: ["set up right", "designed with some thought", "actually planned out"] },
+  { pattern: /\bmust prioritize\b/gi, alternatives: ["need to put first", "have to focus on", "should make a priority"] },
+  { pattern: /\bintegration of\b/gi, alternatives: ["adding more", "baking in", "throwing in"] },
+  { pattern: /\bensure (?:sustainable|durable|stable)\b/gi, alternatives: ["keep it sustainable", "make it stable", "build it to last"] },
+  { pattern: /\blivable communit(?:y|ies)\b/gi, alternatives: ["places worth living in", "neighborhoods that don't suck", "decent places to live"] },
+  { pattern: /\bcontinue to expand and densify\b/gi, alternatives: ["keep growing and getting more packed", "spread out and get more crowded", "keep filling up"] },
   { pattern: /\bstormwater runoff\b/gi, alternatives: ["rain runoff", "the water that pools up when it rains", "rainwater overflow"] },
   { pattern: /\bdrainage systems?\b/gi, alternatives: ["the pipes underground", "sewer lines", "what handles the rainwater"] },
   { pattern: /\bmental well-?being\b/gi, alternatives: ["how people feel day to day", "mood and mental state", "how you're doing in your head"] },
