@@ -50,7 +50,10 @@ interface HumanizeResult {
 
 const MAX_CHARS = 25000;
 const DEFAULT_CONTENT_MODE: HumanizerContentMode = "auto";
-const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "chain";
+// Stealth is the only mode that beats AI detectors. Standard/Strict modes
+// were removed since they don't include the obfuscator / adversarial sampling
+// / hop-2 pipeline and produce 100% AI output on Copyleaks.
+const DEFAULT_MODEL_PRESET: HumanizerModelPreset = "stealth";
 const DEFAULT_REFERENCE_STYLE: HumanizerReferenceStyle = "direct";
 
 const HUMANIZER_HANDOFF_KEY = "humanizer-prefill-text";
@@ -238,55 +241,10 @@ export function HumanizerPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="grid grid-cols-3 rounded-lg border border-border/60 bg-muted/10 p-1">
-              {[
-                { id: "chain" as const, label: "Standard" },
-                { id: "chain-strict" as const, label: "Strict" },
-                { id: "stealth" as const, label: "Stealth" },
-              ].map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setPreset(option.id)}
-                  disabled={loading}
-                  className={`h-9 rounded-md text-sm font-medium transition-colors ${
-                    preset === option.id
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            <div className="px-1 text-xs text-muted-foreground leading-relaxed">
-              {preset === "stealth" ? (
-                <span>
-                  <strong className="text-foreground">Stealth:</strong>{" "}
-                  rewrites using a human voice anchor. Tested clean against
-                  Copyleaks. Output sounds natural but may shift register
-                  toward casual.
-                </span>
-              ) : preset === "chain-strict" ? (
-                <span>
-                  <strong className="text-foreground">Strict:</strong> swaps
-                  complex words only. Best for{" "}
-                  <strong className="text-foreground">truly unique</strong>{" "}
-                  content (custom tours, original blogs). If the source
-                  duplicates competitor sites, use Standard instead — Strict
-                  can&apos;t break verbatim phrase matches.
-                </span>
-              ) : (
-                <span>
-                  <strong className="text-foreground">Standard:</strong>{" "}
-                  restructures sentences. Best for product pages,
-                  &quot;About&quot;/&quot;Why Choose&quot; copy, or any source
-                  that may share phrasing with competitors. May drop 1 minor
-                  decorative detail.
-                </span>
-              )}
-            </div>
+          <div className="px-1 text-xs text-muted-foreground leading-relaxed">
+            Rewrites using a multi-stage stealth pipeline (topic obfuscator,
+            5-variant Llama 70B sampling, hop-2 DeepSeek mix, post-processing).
+            Tested clean against Copyleaks on poisoned topics.
           </div>
 
           <Button
@@ -297,18 +255,12 @@ export function HumanizerPage() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {preset === "stealth"
-                  ? "Stealth rewriting..."
-                  : preset === "chain-strict"
-                    ? "Rewriting (strict)..."
-                    : "Rewriting..."}
+                Stealth rewriting...
               </>
             ) : (
               <>
                 <Wand2 className="h-4 w-4" />
-                {preset === "chain-strict"
-                  ? "Rewrite (keep all facts)"
-                  : "Rewrite"}
+                Rewrite
               </>
             )}
           </Button>
@@ -333,9 +285,7 @@ export function HumanizerPage() {
               <CardContent className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <div className="text-sm">
-                  {preset === "chain-strict"
-                    ? "Running strict rewrite — preserving all facts..."
-                    : "Running 2-model chain rewrite..."}
+                  Running stealth pipeline (5 Llama variants + DeepSeek hop-2)...
                 </div>
               </CardContent>
             </Card>
