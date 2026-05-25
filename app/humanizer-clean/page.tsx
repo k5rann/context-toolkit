@@ -1,9 +1,7 @@
-import { HumanizerCleanPage } from "@/components/humanizer-clean/humanizer-clean-page";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Veil — Humanizer",
-};
-
+// Old route from the multi-UI iteration phase. The /humanizer route is now
+// the canonical Stealth pipeline UI. Redirect anyone with a stale bookmark.
 export default function Page() {
-  return <HumanizerCleanPage />;
+  redirect("/humanizer");
 }
